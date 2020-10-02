@@ -6,3 +6,4 @@ e=10
 f=15
 print("simon")
 print("machin")
+print("coucou")
