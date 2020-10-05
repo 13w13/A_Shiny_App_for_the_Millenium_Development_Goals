@@ -52,6 +52,7 @@ Indeed, building interactive dashboards offers the possibility to explore the ev
 
 ### 1.3 Examples found of target data visualization for our project
 http://datatopics.worldbank.org/mdgs/trends-and-projections-of-each-mdg-indicator-for-each-country.html
+
 http://datatopics.worldbank.org/sdgs/
 
 
