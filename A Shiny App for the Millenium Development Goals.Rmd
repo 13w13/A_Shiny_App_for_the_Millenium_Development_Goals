@@ -44,7 +44,8 @@ In order to have an aggreted data, we have used a very rich database provided by
 
 Driven Data aggregated  data from 1972-2007 on over 1200 macroeconomic indicators in 214 countries around the world. A random snapshot of the data looks like the below. Each row represents a timeseries for a specific indicator and country. The row has an id, a country name, a series code, a series name, and data for the years 1972 - 2007.
 
-![Snashot of data]("C:/Users/swp/Documents/_Perso/Cours/M2/U3. Programing/Advanced R/0.Group Project/Shiny Project/shiny_app/img/snapshot_millenium.png")
+![Snapshot of data]("C:/Users/swp/Documents/_Perso/Cours/M2/U3. Programing/Advanced R/0.Group Project/Shiny Project/shiny_app/img/snapshot_millenium.png")
+
 
 We hope that this presentation allowed to understand our project and the real usefulness of a shiny app! 
 Indeed, building interactive dashboards offers the possibility to explore the evolution trend for each country and/or region of the world, to compare them both for each macroeconomic indicator but also for each millennium goal.
@@ -61,6 +62,7 @@ http://datatopics.worldbank.org/sdgs/
 Deal with Missing Values 
 Rename column : OK
 Casting from a wide table to a long table : OK
+Add the 8 global Goal
 
 transformation into Time Series : Needed ? 
 
@@ -96,6 +98,8 @@ library(magrittr)
 library(data.table)
 library(ggplot2)
 library(readr)
+library(httr)
+library(readxl)
 
 ```
 
@@ -123,9 +127,6 @@ goalD[X1==559]
 ```
 So here we can see that ID=559 corresponds to Afganistant 7.8 indicators for environetanl sustainibilty goal (Goal7) According to MG website, 7.8 is defined by the Proportion of population using an improved drinking water source. 
 
-```{r}
-as.character(c(1972:2007))
-```
 
 
 Using colnames() in order to extract all the column names that are Dates and save these as the character vector Dates. 
@@ -142,7 +143,70 @@ head(goalD)
 ```{r}
 Dates = (colnames(goalD[,!(c(1,38,39,40))]))
 ```
-We should rename these column by removing the "YR+Date"
+
+
+### 2.2 Building up Goals - Topics and Sub-Topics
+Get uniqe macroindicator
+```{r}
+Series_Names_uniq<-unique(goalD$Series_Name)
+str(Series_Names_uniq)
+```
+There is 1305 unique macroindicators
+
+```{r}
+Series_Code_uniq<-unique(goalD$Series_Code)
+str(Series_Code_uniq)
+Series_Code_uniq
+```
+and 1305 unique Series Code
+
+We need to add new row with the attached Goal for each indicators in order to have a global view of each indicators. 
+To do that, we need to add another ressource to our data : mapping from the World Bank. 
+https://datahelpdesk.worldbank.org/knowledgebase/articles/201175-how-does-the-world-bank-code-its-indicators
+
+"A systematic coding convention is an important part of database design. Variable codes should be both convenient to use and easy to remember. Codes that are long and descriptive are slow to enter and result in formulas that are difficult to read."
+The data help desk from the World Bank provides Word Developeemnt Indicatorcode breakdowns and descriptions for each component. 
+
+Let us load this code.
+```{r}
+urlfile_WDI_break="http://databank.worldbank.org/data/download/site-content/WDI_CETS.xls"
+```
+
+WDI series code are in the 2dn sheet of the xls file. 
+We use Get function since readxl doesn't support http download yet.  
+```{r}
+GET(urlfile_WDI_break, write_disk(tf <- tempfile(fileext = ".xls")))
+WDI_break <- read_xls(tf, sheet=2) %>% as.data.table 
+head(WDI_break)
+```
+
+=>Create a function which matches Series Code and copy for the row associated Topic, SubTopic1 and SupTopic2. 
+Void if doesn't match. 
+
+
+
+
+
+### 2.3 Contry Classification
+Here Country Classifications
+https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups
+
+
+Use current classification of World Bank for country
+```{r}
+urlfile_Country_break="http://databank.worldbank.org/data/download/site-content/CLASS.xls"
+```
+
+Here we use sheet n=3 (for funny fact, the excel file had 1 cashed sheet :) ) 
+```{r}
+GET(urlfile_Country_break, write_disk(tf <- tempfile(fileext = ".xls")))
+Country_break <- read_xls(tf, sheet=3) %>% as.data.table 
+head(Country_break)
+```
+=> Write function to 
+
+##3 Creating plots
+3.1 Casting from a wide table to a long table:
 
 
 ```{r}
@@ -160,19 +224,19 @@ Change the data type of the Date column to "Date" using the function as.Date()
 PlotDT$Date = PlotDT$Date %>%  as.Date(format = "%Y")
 head(PlotDT$Date)
 ```
-as.date needs day and month. here create fake days and month : valid solution ? 
-```{r}
+as.date needs day and month. Here create fake days and month : valid solution ?
 
+
+=> Ok for now otherwise solution : 
 D$year <- format(as.Date(D$date), format = "%Y") 
-
 library(lubridate)
 year(df1$Date)
-```
 
 
-Select a subset of PlotDT with Province/State as and Country/Region France.
+###3.2 Create basic Plot
+Select a subset of PlotDT with Country_Name==China as and Series_Name Ensure environmental sustainability
 ```{r}
-ggplot(PlotDT[`Country_Name`=="China" & `Series_Name`=="Ensure environmental sustainability"],
+ggplot(PlotDT[`Country_Name`=="China" &`Series_Name`=="Ensure environmental sustainability"],
        aes(x= Date, y = Value)) + 
    geom_line()
 
@@ -183,6 +247,10 @@ PlotDT[`Country_Name`=="China" & `Series_Name`=="Ensure environmental sustainabi
 ```
 
 
+```{r}
+PlotDT %>% head
+PlotDT$Series_Code
+```
 
 
 
