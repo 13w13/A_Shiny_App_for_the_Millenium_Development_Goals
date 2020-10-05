@@ -58,11 +58,14 @@ http://datatopics.worldbank.org/sdgs/
 
 ### 1.4 Outilne used for data preparation 
 
-Deal with Missing Values
-Rename column 
-Casting from a wide table to a long table
+Deal with Missing Values 
+Rename column : OK
+Casting from a wide table to a long table : OK
 
-transformation into Time Series
+transformation into Time Series : Needed ? 
+
+Add region ? 
+
 
 ### 1.5 Outilne used for our app dev 
 
@@ -111,11 +114,73 @@ goalD<-urlfile%>% url %>% read_csv %>% as.data.table
 
 ```{r}
 goalD %>% head()
+str(goalD)
+```
+
+
+```{r}
+goalD[X1==559]
+```
+So here we can see that ID=559 corresponds to Afganistant 7.8 indicators for environetanl sustainibilty goal (Goal7) According to MG website, 7.8 is defined by the Proportion of population using an improved drinking water source. 
+
+```{r}
+as.character(c(1972:2007))
+```
+
+
+Using colnames() in order to extract all the column names that are Dates and save these as the character vector Dates. 
+Dates are from the 2dn column to the 37th
+But first, we should rename these columns by removing "YR+Date" and add a _ in the other columns
+
+```{r}
+cols<-c("Index","1972","1973","1974","1975","1976","1977","1978","1979","1980","1981","1982","1983","1984","1985","1986","1987","1988","1989","1990","1991","1992","1993","1994","1995","1996","1997","1998","1999","2000","2001","2002","2003","2004","2005","2006","2007","Country_Name","Series_Code","Series_Name")
+colnames(goalD)<-cols
+head(goalD)
+```
+
+
+```{r}
+Dates = (colnames(goalD[,!(c(1,38,39,40))]))
+```
+We should rename these column by removing the "YR+Date"
+
+
+```{r}
+PlotDT = data.table::melt(goalD, id.vars = c(1,38,39,40), 
+          measure.vars = Dates, 
+          variable.name = "Date",
+          value.name = "Value")
 ```
 
 
 
+Change the data type of the Date column to "Date" using the function as.Date()
+```{r}
 
+PlotDT$Date = PlotDT$Date %>%  as.Date(format = "%Y")
+head(PlotDT$Date)
+```
+as.date needs day and month. here create fake days and month : valid solution ? 
+```{r}
+
+D$year <- format(as.Date(D$date), format = "%Y") 
+
+library(lubridate)
+year(df1$Date)
+```
+
+
+Select a subset of PlotDT with Province/State as and Country/Region France.
+```{r}
+ggplot(PlotDT[`Country_Name`=="China" & `Series_Name`=="Ensure environmental sustainability"],
+       aes(x= Date, y = Value)) + 
+   geom_line()
+
+```
+
+```{r}
+PlotDT[`Country_Name`=="China" & `Series_Name`=="Ensure environmental sustainability"]
+```
 
 
 
