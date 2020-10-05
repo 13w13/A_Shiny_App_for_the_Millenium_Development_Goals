@@ -1,5 +1,5 @@
 # A Shiny App for the Millenium Development Goals
-author: Julieva Cohen, Alexandra, Antoine Settelen, Simon Weiss
+Julieva Cohen, Alexandra, Antoine Settelen, Simon Weiss
 
 ---
 
