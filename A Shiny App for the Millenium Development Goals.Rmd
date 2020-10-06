@@ -101,7 +101,7 @@ library(ggplot2)
 library(readr)
 library(httr)
 library(readxl)
-
+library(stringr)
 ```
 
 ### 2.1 Loading the Data  
@@ -147,19 +147,56 @@ Dates = (colnames(goalD[,!(c(1,38,39,40))]))
 
 
 ### 2.2 Building up Goals - Topics and Sub-Topics
-Get uniqe macroindicator
+Count uniqe macroindicator by Series Name and Series Code
 ```{r}
-Series_Names_uniq<-unique(goalD$Series_Name)
-str(Series_Names_uniq)
+
+goalD[unique(goalD$Series_Name),.N]
+goalD[unique(goalD$Series_Code),.N]
+
 ```
-There is 1305 unique macroindicators
+There is 1305 unique Series Name and Series Code
+
+Class what are the most frequent macroindicators
+```{r}
+goalD[,.N,by = list(Series_Code,Series_Name)] %>% .[order(-N)]
+```
+
+
+Get metric in indicators Names : 
+Using stringr library and str_extract_all in order to get in a matrix all what is inside parenthesis
 
 ```{r}
-Series_Code_uniq<-unique(goalD$Series_Code)
-str(Series_Code_uniq)
-Series_Code_uniq
+# Get the parenthesis and what is inside
+metrics <- as.data.frame(str_extract_all(goalD$Series_Name, "\\([^()]+\\)", simplify = TRUE))
+metrics
+
 ```
-and 1305 unique Series Code
+
+Some metrics had double parenthesis and thus created a second column in our matrix
+```{r}
+unique(metrics[,2])
+```
+We should merge them into the first column
+```{r}
+mapply(metrics$V1,paste(metrics$V2) %>% head
+
+mode(metrics[,1])
+```
+```{r}
+
+```
+
+
+```{r}
+metrics
+as.data.frame(metrics)
+# Remove parenthesis
+metrics <- substring(metrics, 2, nchar(metrics)-1)
+#Verify results
+k[10000,]
+goalD[10000]
+```
+
 
 We need to add new row with the attached Goal for each indicators in order to have a global view of each indicators. 
 To do that, we need to add another ressource to our data : mapping from the World Bank. 
@@ -180,6 +217,26 @@ GET(urlfile_WDI_break, write_disk(tf <- tempfile(fileext = ".xls")))
 WDI_break <- read_xls(tf, sheet=2) %>% as.data.table 
 head(WDI_break)
 WDI_break %>% View
+```
+
+Rename Series Code and Series Name with underscore
+
+```{r}
+colnames(WDI_break) =  colnames(WDI_break) %>% gsub(" ","_",.) 
+```
+
+
+
+
+Count how many maches tables with Series Code and how many none
+
+
+```{r}
+
+```
+
+
+```{r}
 goalD %>% View
 goalD_join <- merge(goalD,WDI_break, by.x = 'Series_Code', by.y = 'Series Code', all.x=FALSE) 
 
