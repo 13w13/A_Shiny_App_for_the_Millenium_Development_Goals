@@ -214,14 +214,18 @@ Country_break %>% View
 The idea for the final Shiny app is to propose selection of aggregaed Countries following World Bank classification to the user in order to compare indicators in different countries. 
 
 
-THe Column E and the Row 6 from our excel file were empty. We can remove them. 
-Furthermore, we can deleate Code information from our table. 
-
+The Column E and the Row 6 from our excel file were empty. We can remove them. 
+Furthermore, we can deleate Code information from our table and remplace space in colname by an inderscore. 
 
 ```{r}
 Country_break<-Country_break[!1,!c(2,3)]
+colnames(Country_break) =  colnames(Country_break) %>% gsub(" ","_",.) 
 Country_break %>% head
 ```
+
+
+
+
 The World Bank provides details about how they classify countries :
 https://datahelpdesk.worldbank.org/knowledgebase/articles/378834-how-does-the-world-bank-classify-countries
 
@@ -238,7 +242,11 @@ Economies are divided into IDA, IBRD, and Blend countries based on the operation
 
 Finaly, Other country groupings in World Development Indicators include OECD member countries, countries in the euro area, member states of the European Union, the UN Least Development Countries classification, and the World."
 
-
+We can now perform an Left Join with merge function
+```{r}
+goalD<-merge(goalD,Country_break, by.x = 'Country_Name', by.y = 'Economy', all.x=TRUE)
+goalD %>% head
+```
 
 
 
