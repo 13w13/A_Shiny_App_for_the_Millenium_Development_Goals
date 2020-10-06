@@ -204,13 +204,48 @@ Use current classification of World Bank for country
 urlfile_Country_break="http://databank.worldbank.org/data/download/site-content/CLASS.xls"
 ```
 
-Here we use sheet n=3 (for funny fact, the excel file had 1 cashed sheet :) ) 
+Here we use sheet n=1 (for funny fact, the excel file had 1 hidden sheet :)) and select group name
 ```{r}
 GET(urlfile_Country_break, write_disk(tf <- tempfile(fileext = ".xls")))
-Country_break <- read_xls(tf, sheet=3) %>% as.data.table 
+Country_break <- read_xls(tf, range="C5:I224", sheet=1) %>% as.data.table 
 head(Country_break)
+Country_break %>% View
 ```
-=> Write function to 
+The idea for the final Shiny app is to propose selection of aggregaed Countries following World Bank classification to the user in order to compare indicators in different countries. 
+
+
+THe Column E and the Row 6 from our excel file were empty. We can remove them. 
+Furthermore, we can deleate Code information from our table. 
+
+
+```{r}
+Country_break<-Country_break[!1,!c(2,3)]
+Country_break %>% head
+```
+The World Bank provides details about how they classify countries :
+https://datahelpdesk.worldbank.org/knowledgebase/articles/378834-how-does-the-world-bank-classify-countries
+
+
+From their website, we can read that 
+"The main classifications provided are by geographic region, by income group, and by the operational lending categories of the World Bank Group.[...]   
+Groupings are primarily based on the regions used for administrative purposes by the World Bank. There are two main variants: one which includes all economies, and one which excludes high-income economies (see income groups below for the definition of low-, lower middle-, upper middle-, and high-income categories).    
+
+Income groups
+Economies are currently divided into four income groupings: low, lower-middle, upper-middle, and high. Income is measured using gross national income (GNI) per capita, in U.S. dollars, converted from local currency using the World Bank Atlas method.
+
+Economies are divided into IDA, IBRD, and Blend countries based on the operational policies of the World Bank. International Development Association (IDA) countries are those with low per capita incomes that lack the financial ability to borrow from the International Bank for Reconstruction and Development (IBRD). Blend countries are eligible for IDA loans but are also eligible for IBRD loans because they are financially creditworthy. 
+
+
+Finaly, Other country groupings in World Development Indicators include OECD member countries, countries in the euro area, member states of the European Union, the UN Least Development Countries classification, and the World."
+
+
+
+
+
+
+
+
+
 
 ##3 Creating plots
 3.1 Casting from a wide table to a long table:
