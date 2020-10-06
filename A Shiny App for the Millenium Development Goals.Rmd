@@ -148,11 +148,10 @@ Dates = (colnames(goalD[,!(c(1,38,39,40))]))
 
 ### 2.2 Building up Goals - Topics and Sub-Topics
 Count uniqe macroindicator by Series Name and Series Code
+
 ```{r}
-
-goalD[unique(goalD$Series_Name),.N]
-goalD[unique(goalD$Series_Code),.N]
-
+goalD[,.N,(goalD$Series_Name)]
+goalD[,.N,(goalD$Series_Code)]
 ```
 There is 1305 unique Series Name and Series Code
 
@@ -168,34 +167,37 @@ Using stringr library and str_extract_all in order to get in a matrix all what i
 ```{r}
 # Get the parenthesis and what is inside
 metrics <- as.data.frame(str_extract_all(goalD$Series_Name, "\\([^()]+\\)", simplify = TRUE))
-metrics
-
 ```
 
 Some metrics had double parenthesis and thus created a second column in our matrix
 ```{r}
 unique(metrics[,2])
 ```
-We should merge them into the first column
-```{r}
-mapply(metrics$V1,paste(metrics$V2) %>% head
 
-mode(metrics[,1])
+We should merge them into the first column. So we copy content of second colomun into first if second is not null. 
+
+```{r}
+metrics$V1 <- apply(metrics, 1, function(x) paste(str_trim(x[!is.na(x)]), collapse=""))
 ```
-```{r}
+Remove parenthesis
 
+```{r}
+metrics %>% head
 ```
 
 
 ```{r}
-metrics
-as.data.frame(metrics)
-# Remove parenthesis
-metrics <- substring(metrics, 2, nchar(metrics)-1)
 #Verify results
-k[10000,]
+metrics$V1[10000]
 goalD[10000]
 ```
+We can then add new column to goalD. 
+
+```{r}
+goalD$Metrics<-metrics$V1
+goalD %>% head
+```
+
 
 
 We need to add new row with the attached Goal for each indicators in order to have a global view of each indicators. 
@@ -224,31 +226,32 @@ Rename Series Code and Series Name with underscore
 ```{r}
 colnames(WDI_break) =  colnames(WDI_break) %>% gsub(" ","_",.) 
 ```
-
-
-
-
-Count how many maches tables with Series Code and how many none
-
-
+Count how many series code there is in WDI_break, topics, sub-topics1, sub-topics2 and sub-topic3 and order them by frequency
 ```{r}
-
+WDI_break[,.N,(WDI_break$Series_Code)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$Topic)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$SubTopic1)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$SubTopic2)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$SubTopic3)]%>% .[order(-N)]
 ```
 
+Some Series Code (those in miniscule and numbers are not codded in World Bank Break). We decided to remove them from our dataset By doing an inner join(by setting: allx=FALSE)
+```{r}
+goalD_old <-goalD
+goalD <- merge(goalD,WDI_break, by.x = 'Series_Code', by.y = 'Series_Code', all = FALSE)
+```
 
 ```{r}
-goalD %>% View
-goalD_join <- merge(goalD,WDI_break, by.x = 'Series_Code', by.y = 'Series Code', all.x=FALSE) 
-
-goalD_join %>% View
-
+dim(goalD_old)-dim(goalD)
 ```
-Series Code en miniscule et nombres pas reconnues 
-=>Create a function which matches Series Code and copy for the row associated Topic, SubTopic1 and SupTopic2. 
-Void if doesn't match. 
+We have removed 13 677 observation due to missing informations in our coding tables. 
 
 
-
+We can remove 1 dupicated Series_Name from our dataset
+```{r}
+goalD<-goalD[,!42]
+colnames(goalD[,40])="Series_Name"
+```
 
 
 ### 2.3 Contry Classification
@@ -319,7 +322,7 @@ goalD[Country_Name=="France"] %>% head
 
 
 ```{r}
-PlotDT = data.table::melt(goalD, id.vars = c(1,38,39,40), 
+PlotDT = data.table::melt(goalD, id.vars = c(1,2,3,40,41,42,43,44,45,46,47,48,49), 
           measure.vars = Dates, 
           variable.name = "Date",
           value.name = "Value")
@@ -347,16 +350,27 @@ year(df1$Date)
 
 
 ###3.2 Create basic Plot
-Select a subset of PlotDT with Country_Name==China as and Series_Name Ensure environmental sustainability
+Select a subset of PlotDT with Country_Name==China as and Series_Name Agricultural machinery, tractors
 ```{r}
-ggplot(PlotDT[`Country_Name`=="China" &`Series_Name`=="Ensure environmental sustainability"],
+ggplot(PlotDT[`Country_Name`=="China" &`Series_Name.x`=="Agricultural machinery, tractors"],
        aes(x= Date, y = Value)) + 
    geom_line()
 
 ```
 
 ```{r}
-PlotDT[`Country_Name`=="China" & `Series_Name`=="Ensure environmental sustainability"]
+PlotDT[`Country_Name`=="China" & `Series_Name.x`=="Agricultural machinery, tractors"]
+```
+
+Test subTopic1
+```{r}
+ggplot(PlotDT[`Country_Name`=="China" &`SubTopic1`=="Agricultural production"],
+       aes(x= Date, y = Value)) + 
+   geom_line()
+```
+
+```{r}
+PlotDT[`Country_Name`=="China"&`SubTopic1`=="Agricultural production"]
 ```
 
 
@@ -392,4 +406,4 @@ You can also use the `shinyApp` function to define an application inline rather 
 In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
 
 
-
+#analyse discriminante des indicateurs
