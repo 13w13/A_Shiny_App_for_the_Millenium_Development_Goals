@@ -248,8 +248,10 @@ goalD<-merge(goalD,Country_break, by.x = 'Country_Name', by.y = 'Economy', all.x
 goalD %>% head
 ```
 
-
-
+Let's see how France is classify
+```{r}
+goalD[Country_Name=="France"] %>% head
+```
 
 
 
