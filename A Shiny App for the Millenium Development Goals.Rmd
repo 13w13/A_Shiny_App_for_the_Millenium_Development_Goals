@@ -1,7 +1,7 @@
 ---
 title: "A Shiny App for the Millenium Development Goals"
 runtime: shiny
-author: "Julieva Cohen, Alexandra, Antoine Settelen, Simon Weiss"
+author: "Julieva Cohen, Alexandra Amiens, Antoine Settelen, Simon Weiss"
 date: "`r Sys.Date()`"
 output: html_document
 ---
