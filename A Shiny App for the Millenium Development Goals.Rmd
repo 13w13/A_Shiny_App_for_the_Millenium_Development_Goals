@@ -205,7 +205,7 @@ Country_break <- read_xls(tf, sheet=3) %>% as.data.table
 head(Country_break)
 ```
 => Write function to 
-
+.
 ##3 Creating plots
 3.1 Casting from a wide table to a long table:
 
