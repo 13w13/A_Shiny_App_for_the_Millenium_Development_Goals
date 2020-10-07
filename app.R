@@ -3,6 +3,11 @@
 
 #global_scope
 selected_country <- unique(PlotDT$Country_Name)
+selected_topic <- unique(goalD$Topic)
+selected_subtopic_1 <- list()
+selected_subtopic_2 <- list()
+selected_subtopic_3 <- list()
+
 
 
 # Define UI for application that draws a histogram
@@ -13,10 +18,41 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      helpText("Here you can find some information
-                     about world develpment goals"),
+      helpText("Here you can find some graphical information
+                     about World Development Goals"),
+      br(), 
+      helpText("First, choose the World Development Indicators."),
+      br(), 
       
       # inputs
+      selectInput("topic", 
+                  h2("Choose a topic", align = "center"),
+                  selected_topic, 
+                  "Environment"),
+      
+      br(), 
+      
+      selectInput("subtopic_1", 
+                  h2("Choose a subtopic 1", align = "center"),
+                  selected_subtopic_1, 
+                  choices = NULL),
+      
+      br(), 
+      
+      selectInput("subtopic_2", 
+                  h2("Choose a subtopic 2", align = "center"),
+                  selected_subtopic_2, 
+                  choices = NULL),
+      
+      br(), 
+      
+      selectInput("subtopic_3", 
+                  h2("Choose a subtopic 3", align = "center"),
+                  selected_subtopic_3, 
+                  choices = NULL),
+      
+      br(), 
+      
       selectInput("country", 
                   h2("Choose a country", align = "center"),
                   selected_country, 
