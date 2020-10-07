@@ -1,21 +1,6 @@
 ##Exercice : Shiny Deaths from Covid-19
-#Load Library
-library(shiny)
-library(magrittr)
-library(data.table)
-library(ggplot2)
-library(readr)
 
 
-# import data
-urlfile="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
-coronaD<-urlfile%>% url %>% read_csv %>% as.data.table 
-# Function
-Dates<-colnames(coronaD[,-c(1:4)])
-setDT(coronaD)
-PlotDT = melt(coronaD, id.vars = 1:4, measure.vars = Dates, variable.name = "Date",value.name = "Dead")
-PlotDT$Date = PlotDT$Date %>% as.Date(format = "%m/%d/%y")
-SelectedCountries = c("France","Italy","Spain","Germany")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
