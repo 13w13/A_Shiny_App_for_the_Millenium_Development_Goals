@@ -1,52 +1,74 @@
 ##Exercice : Shiny Deaths from Covid-19
 
 
+#global_scope
+selected_country <- unique(PlotDT$Country_Name)
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-    
-    # Give the page a title
-    titlePanel("Death from Covid"),
+  titlePanel(
+    # app title/description
+    h1("MGD"),
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      helpText("Here you can find some information
+                     about world develpment goals"),
+      
+      # inputs
+      selectInput("country", 
+                  h2("Choose a country", align = "center"),
+                  selected_country, 
+                  "France"),
+      br(),
+      
+      radioButtons("y_axis_choice", 
+                   h2("Axis :", align = "center"), 
+                   c("linear", "logarithmic")), 
+      
+      br(), 
+      
+      dateRangeInput("date_choice", 
+                     h2("Choose a date range :", align="center"),
+                     format = "yyyy",
+                     start="1972"),
+      
+      br(),
+      p(strong("Full data is available just below."), style="strong"),
+      br(),
+      a(strong("DATA AVAILABLE HERE"), href="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"),
+      br(),
+      img(src="https://i1.wp.com/www.un.org/sustainabledevelopment/wp-content/uploads/2015/12/english_SDG_17goals_poster_all_languages_with_UN_emblem_1.png?fit=728%2C451&ssl=1", height = 72, width = 72, style="margin-left:80px"),
 
-    # Generate a row with a sidebar
-    sidebarLayout(      
-        
-        # Define the sidebar with one input
-        sidebarPanel(
-            selectInput("countryregion", "Country/Region:", 
-                        choices=SelectedCountries),
-            hr(),
-            helpText("Data from CSSEGIS and Data JH")
-        ),
-        
-        # Create a spot for the barplot
-        mainPanel(
-            plotOutput("countryPlot")  
-        )
-        
+      
+    ),
+    mainPanel(
+      # outputs
+      plotOutput("displot"), 
+      
     )
+  )
 )
 
 
 #  Define a server for the Shiny app
 server <- function(input, output) {
-    # Fill in the spot we created for a plot
-    output$countryPlot <- renderPlot({
-        # Render the plot
-      
-        
-PlotDT[`Country/Region` %in% SelectedCountries & is.na(`Province/State`)] %>% ggplot(aes(x = Date, y = Dead)) +
-            geom_line(data = PlotDT[`Country/Region` == "France" & is.na(`Province/State`)])+
-            geom_line(data = PlotDT[`Country/Region` == "Germany"])+
-            geom_line(data = PlotDT[`Country/Region` == "Italy"])+
-            geom_line(data = PlotDT[`Country/Region` == "Spain"])+
-            geom_line(data = PlotDT[`Country/Region` == input$countryregion & is.na(`Province/State`)], color = 'red')
-        
-        
-        
-        
-    })
+  
+  
+  output$displot <- renderPlot({
+    
+    p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
+    
+    ggplot(PlotDT[`Country_Name`==input$country &`Series_Name.x`=="Agricultural machinery, tractors"],
+           aes(x= Date, y = Value)) + 
+      geom_line() + scale_x_date(limits = input$date_choice) + p
+    
+  })
+  
 }
+  
+
 
 
 # Run the application 
