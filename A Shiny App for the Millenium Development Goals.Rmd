@@ -60,7 +60,7 @@ http://datatopics.worldbank.org/sdgs/
 
 ### 1.4 Outilne used for data preparation 
 
-Deal with Missing Values 
+Deal with Missing Values : ok 
 Rename column : OK
 Casting from a wide table to a long table : OK
 Add the 8 global Goal
@@ -101,7 +101,7 @@ library(ggplot2)
 library(readr)
 library(httr)
 library(readxl)
-
+library(stringr)
 ```
 
 ### 2.1 Loading the Data  
@@ -147,19 +147,61 @@ Dates = (colnames(goalD[,!(c(1,38,39,40))]))
 
 
 ### 2.2 Building up Goals - Topics and Sub-Topics
-Get uniqe macroindicator
-```{r}
-Series_Names_uniq<-unique(goalD$Series_Name)
-str(Series_Names_uniq)
-```
-There is 1305 unique macroindicators
+Count uniqe macroindicator by Series Name and Series Code
 
 ```{r}
-Series_Code_uniq<-unique(goalD$Series_Code)
-str(Series_Code_uniq)
-Series_Code_uniq
+goalD[,.N,(goalD$Series_Name)]
+goalD[,.N,(goalD$Series_Code)]
 ```
-and 1305 unique Series Code
+There is 1305 unique Series Name and Series Code
+
+Class what are the most frequent macroindicators
+```{r}
+goalD[,.N,by = list(Series_Code,Series_Name)] %>% .[order(-N)]
+```
+
+
+Get metric in indicators Names : 
+Using stringr library and str_extract_all in order to get in a matrix all what is inside parenthesis
+
+```{r}
+# Get the parenthesis and what is inside
+metrics <- as.data.frame(str_extract_all(goalD$Series_Name, "\\([^()]+\\)", simplify = TRUE))
+```
+
+Some metrics had double parenthesis and thus created a second column in our matrix
+```{r}
+unique(metrics[,2])
+```
+
+We should merge them into the first column. So we copy content of second colomun into first if second is not null. 
+
+```{r}
+metrics$V1 <- apply(metrics, 1, function(x) paste(str_trim(x[!is.na(x)]), collapse=""))
+```
+Remove parenthesis
+
+```{r}
+metrics %>% head
+```
+
+
+```{r}
+#Verify results
+metrics$V1[10000]
+goalD[10000]
+```
+We can then add new column to goalD. 
+
+```{r}
+goalD$Metrics<-metrics$V1
+goalD %>% head
+```
+
+#Add cosmetic step (if we have times)
+Remove metrics in Series_Name
+
+
 
 We need to add new row with the attached Goal for each indicators in order to have a global view of each indicators. 
 To do that, we need to add another ressource to our data : mapping from the World Bank. 
@@ -180,18 +222,39 @@ GET(urlfile_WDI_break, write_disk(tf <- tempfile(fileext = ".xls")))
 WDI_break <- read_xls(tf, sheet=2) %>% as.data.table 
 head(WDI_break)
 WDI_break %>% View
-goalD %>% View
-goalD_join <- merge(goalD,WDI_break, by.x = 'Series_Code', by.y = 'Series Code', all.x=FALSE) 
-
-goalD_join %>% View
-
 ```
-Series Code en miniscule et nombres pas reconnues 
-=>Create a function which matches Series Code and copy for the row associated Topic, SubTopic1 and SupTopic2. 
-Void if doesn't match. 
+
+Rename Series Code and Series Name with underscore
+
+```{r}
+colnames(WDI_break) =  colnames(WDI_break) %>% gsub(" ","_",.) 
+```
+Count how many series code there is in WDI_break, topics, sub-topics1, sub-topics2 and sub-topic3 and order them by frequency
+```{r}
+WDI_break[,.N,(WDI_break$Series_Code)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$Topic)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$SubTopic1)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$SubTopic2)]%>% .[order(-N)]
+WDI_break[,.N,(WDI_break$SubTopic3)]%>% .[order(-N)]
+```
+
+Some Series Code (those in miniscule and numbers are not codded in World Bank Break). We decided to remove them from our dataset By doing an inner join(by setting: allx=FALSE)
+```{r}
+goalD_old <-goalD
+goalD <- merge(goalD,WDI_break, by.x = 'Series_Code', by.y = 'Series_Code', all = FALSE)
+```
+Compte removed observations
+```{r}
+dim(goalD_old)-dim(goalD)
+```
+We have removed 13 677 observation due to missing informations in our coding tables. 
 
 
-
+We can remove 1 dupicated Series_Name from our dataset
+```{r}
+goalD<-goalD[,!42]
+colnames(goalD[,40])="Series_Name"
+```
 
 
 ### 2.3 Contry Classification
@@ -204,20 +267,65 @@ Use current classification of World Bank for country
 urlfile_Country_break="http://databank.worldbank.org/data/download/site-content/CLASS.xls"
 ```
 
-Here we use sheet n=3 (for funny fact, the excel file had 1 cashed sheet :) ) 
+Here we use sheet n=1 (for funny fact, the excel file had 1 hidden sheet :)) and select group name
 ```{r}
 GET(urlfile_Country_break, write_disk(tf <- tempfile(fileext = ".xls")))
-Country_break <- read_xls(tf, sheet=3) %>% as.data.table 
+Country_break <- read_xls(tf, range="C5:I224", sheet=1) %>% as.data.table 
 head(Country_break)
+Country_break %>% View
 ```
-=> Write function to 
+The idea for the final Shiny app is to propose selection of aggregaed Countries following World Bank classification to the user in order to compare indicators in different countries. 
+
+
+The Column E and the Row 6 from our excel file were empty. We can remove them. 
+Furthermore, we can deleate Code information from our table and remplace space in colname by an inderscore. 
+
+```{r}
+Country_break<-Country_break[!1,!c(2,3)]
+colnames(Country_break) =  colnames(Country_break) %>% gsub(" ","_",.) 
+Country_break %>% head
+```
+
+
+
+
+The World Bank provides details about how they classify countries :
+https://datahelpdesk.worldbank.org/knowledgebase/articles/378834-how-does-the-world-bank-classify-countries
+
+
+From their website, we can read that 
+"The main classifications provided are by geographic region, by income group, and by the operational lending categories of the World Bank Group.[...]   
+Groupings are primarily based on the regions used for administrative purposes by the World Bank. There are two main variants: one which includes all economies, and one which excludes high-income economies (see income groups below for the definition of low-, lower middle-, upper middle-, and high-income categories).    
+
+Income groups
+Economies are currently divided into four income groupings: low, lower-middle, upper-middle, and high. Income is measured using gross national income (GNI) per capita, in U.S. dollars, converted from local currency using the World Bank Atlas method.
+
+Economies are divided into IDA, IBRD, and Blend countries based on the operational policies of the World Bank. International Development Association (IDA) countries are those with low per capita incomes that lack the financial ability to borrow from the International Bank for Reconstruction and Development (IBRD). Blend countries are eligible for IDA loans but are also eligible for IBRD loans because they are financially creditworthy. 
+
+
+Finaly, Other country groupings in World Development Indicators include OECD member countries, countries in the euro area, member states of the European Union, the UN Least Development Countries classification, and the World."
+
+We can now perform an Left Join with merge function
+```{r}
+goalD<-merge(goalD,Country_break, by.x = 'Country_Name', by.y = 'Economy', all.x=TRUE)
+goalD %>% head
+```
+
+Let's see how France is classify
+```{r}
+goalD[Country_Name=="France"] %>% head
+```
+
+
+
+
 
 ##3 Creating plots
 3.1 Casting from a wide table to a long table:
 
 
 ```{r}
-PlotDT = data.table::melt(goalD, id.vars = c(1,38,39,40), 
+PlotDT = data.table::melt(goalD, id.vars = c(1,2,3,40,41,42,43,44,45,46,47,48,49), 
           measure.vars = Dates, 
           variable.name = "Date",
           value.name = "Value")
@@ -245,16 +353,27 @@ year(df1$Date)
 
 
 ###3.2 Create basic Plot
-Select a subset of PlotDT with Country_Name==China as and Series_Name Ensure environmental sustainability
+Select a subset of PlotDT with Country_Name==China as and Series_Name Agricultural machinery, tractors
 ```{r}
-ggplot(PlotDT[`Country_Name`=="China" &`Series_Name`=="Ensure environmental sustainability"],
+ggplot(PlotDT[`Country_Name`=="China" &`Series_Name.x`=="Agricultural machinery, tractors"],
        aes(x= Date, y = Value)) + 
    geom_line()
 
 ```
 
 ```{r}
-PlotDT[`Country_Name`=="China" & `Series_Name`=="Ensure environmental sustainability"]
+PlotDT[`Country_Name`=="China" & `Series_Name.x`=="Agricultural machinery, tractors"]
+```
+
+Test subTopic1
+```{r}
+ggplot(PlotDT[`Country_Name`=="China" &`SubTopic1`=="Agricultural production"],
+       aes(x= Date, y = Value)) + 
+   geom_line()
+```
+
+```{r}
+PlotDT[`Country_Name`=="China"&`SubTopic1`=="Agricultural production"]
 ```
 
 
@@ -290,4 +409,4 @@ You can also use the `shinyApp` function to define an application inline rather 
 In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
 
 
-
+#analyse discriminante des indicateurs
