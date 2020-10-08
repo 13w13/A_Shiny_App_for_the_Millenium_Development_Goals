@@ -1,5 +1,6 @@
 ##Exercice : Shiny Deaths from Covid-19
 
+<<<<<<< HEAD
 #resoudre le pb de selection sous variable (reactiv) : Antoine
 #rajouter region : Antoine
 
@@ -17,7 +18,20 @@
 #library
 library(shinyWidgets)
 
+=======
+#résoudre le problème de selection sous variable (reactiv) : Antoine
+#Rajouter Région : Antoine
+>>>>>>> a377df8bf31a418b35dfd1949d095198b0277d30
 
+#Amélioration du ggplot : Alexandra et Julieva
+#-Mettre menu selection sur le haut
+#-Comparaison des graphiques : rajouter plusieurs courbe en fonction de la selection utilisateur
+#- changement du nom de l'axe des ordonnées en fonction de la metric'
+
+#Rajouter deuxième onglet : Simon
+#-Map
+  
+  
 #global_scope
 selected_country <- unique(PlotDT$Country_Name)
 selected_topic <- unique(goalD$Topic)
