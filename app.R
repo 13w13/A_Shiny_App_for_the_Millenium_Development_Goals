@@ -1,5 +1,22 @@
 ##Exercice : Shiny Deaths from Covid-19
 
+#resoudre le pb de selection sous variable (reactiv) : Antoine
+#rajouter region : Antoine
+
+#Amelioration du ggplot : Alexandra et Julieva
+#Mettre menu selection sur le haut
+#Comparaison des graphiques : rajouter 
+#plusieurs courbes en fonction de la selection utilisateur
+#changement du nom de laxe des ordonnees en 
+#fonction de la metric 
+
+#rajouter deuxieme onglet : simon 
+#map
+
+
+#library
+library(shinyWidgets)
+
 
 #global_scope
 selected_country <- unique(PlotDT$Country_Name)
@@ -27,8 +44,7 @@ ui <- fluidPage(
       # inputs
       selectInput("topic", 
                   h2("Choose a topic", align = "center"),
-                  selected_topic, 
-                  "Environment"),
+                  selected_topic),
       
       br(), 
       
@@ -76,12 +92,36 @@ ui <- fluidPage(
       a(strong("DATA AVAILABLE HERE"), href="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"),
       br(),
       img(src="https://i1.wp.com/www.un.org/sustainabledevelopment/wp-content/uploads/2015/12/english_SDG_17goals_poster_all_languages_with_UN_emblem_1.png?fit=728%2C451&ssl=1", height = 72, width = 72, style="margin-left:80px"),
-
       
+      br(), 
+      
+      selectInput(
+          inputId = "selected_class",
+          label = h4("Classification Level"),
+          choices = c("Brand", "Brand1", "Brand2"),
+          selected = "Brand"
+      ),
+      
+      br(), 
+      
+      pickerInput(
+          inputId = "selected_product",
+          label = h4("Product Family"),
+          choices = c("a", "b", "c"),
+          options = list(
+            `deselect-all-text` = "None",
+            `select-all-text` = "Total",
+            `actions-box` = TRUE
+          ),
+          width = "100%"
+        )
+  
     ),
     mainPanel(
       # outputs
       plotOutput("displot"), 
+      
+      plotOutput("summary"),
       
     )
   )
@@ -89,7 +129,59 @@ ui <- fluidPage(
 
 
 #  Define a server for the Shiny app
-server <- function(input, output) {
+server <- function(input, output, session) {
+
+  #change the value of subtopic_1 in function of the value of topic  
+  observeEvent(input$topic, {
+      choices <- unique(goalD[goalD$Topic == input$topic, list(SubTopic1)])
+      
+      updateSelectInput(
+      session,
+      inputId = "subtopic_1",
+      choices = choices
+    )
+  })
+  
+  observeEvent(input$subtopic_1, {
+    choices <- unique(goalD[goalD$SubTopic1 == input$subtopic_1, list(SubTopic2)])
+    
+    updateSelectInput(
+      session,
+      inputId = "subtopic_2",
+      choices = choices
+    )
+  })
+  
+  observeEvent(input$subtopic_2, {
+    choices <- unique(goalD[goalD$SubTopic2 == input$subtopic_2, list(SubTopic3)])
+    
+    updateSelectInput(
+      session,
+      inputId = "subtopic_3",
+      choices = choices
+    )
+  })
+  
+  
+  
+  observeEvent(input$selected_class, {
+    if(input$selected_class =="Brand") {
+      choices <- c("a", "b", "c")
+    } else if(input$selected_class =="Brand1") {
+      choices <- c("1", "2", "3")
+    } else {
+      choices <- c("x", "y", "z")
+    }
+    updatePickerInput(
+      session,
+      inputId = "selected_product",
+      choices = choices
+    )
+  })
+  
+  
+  
+  
   
   
   output$displot <- renderPlot({
