@@ -15,6 +15,14 @@
 
 
 #library
+library(shiny)
+library(magrittr)
+library(data.table)
+library(ggplot2)
+library(readr)
+library(httr)
+library(readxl)
+library(stringr)
 library(shinyWidgets)
 
   
@@ -24,7 +32,7 @@ selected_topic <- unique(goalD$Topic)
 selected_subtopic_1 <- list()
 selected_subtopic_2 <- list()
 selected_subtopic_3 <- list()
-
+selected_indicator <- list()
 
 
 # Define UI for application that draws a histogram
@@ -47,24 +55,27 @@ ui <- fluidPage(
                   selected_topic),
       
       br(), 
-      
       selectInput("subtopic_1", 
                   h2("Choose a subtopic 1", align = "center"),
                   selected_subtopic_1, 
                   choices = NULL),
       
       br(), 
-      
       selectInput("subtopic_2", 
                   h2("Choose a subtopic 2", align = "center"),
                   selected_subtopic_2, 
                   choices = NULL),
       
       br(), 
-      
       selectInput("subtopic_3", 
                   h2("Choose a subtopic 3", align = "center"),
                   selected_subtopic_3, 
+                  choices = NULL),
+      
+      br(), 
+      selectInput("indicator", 
+                  h2("Choose a indicator", align = "center"),
+                  selected_indicator, 
                   choices = NULL),
       
       br(), 
@@ -74,13 +85,11 @@ ui <- fluidPage(
                   selected_country, 
                   "France"),
       br(),
-      
       radioButtons("y_axis_choice", 
                    h2("Axis :", align = "center"), 
                    c("linear", "logarithmic")), 
       
       br(), 
-      
       dateRangeInput("date_choice", 
                      h2("Choose a date range :", align="center"),
                      format = "yyyy",
@@ -92,29 +101,7 @@ ui <- fluidPage(
       a(strong("DATA AVAILABLE HERE"), href="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"),
       br(),
       img(src="https://i1.wp.com/www.un.org/sustainabledevelopment/wp-content/uploads/2015/12/english_SDG_17goals_poster_all_languages_with_UN_emblem_1.png?fit=728%2C451&ssl=1", height = 72, width = 72, style="margin-left:80px"),
-      
       br(), 
-      
-      selectInput(
-          inputId = "selected_class",
-          label = h4("Classification Level"),
-          choices = c("Brand", "Brand1", "Brand2"),
-          selected = "Brand"
-      ),
-      
-      br(), 
-      
-      pickerInput(
-          inputId = "selected_product",
-          label = h4("Product Family"),
-          choices = c("a", "b", "c"),
-          options = list(
-            `deselect-all-text` = "None",
-            `select-all-text` = "Total",
-            `actions-box` = TRUE
-          ),
-          width = "100%"
-        )
   
     ),
     mainPanel(
@@ -130,55 +117,100 @@ ui <- fluidPage(
 
 #  Define a server for the Shiny app
 server <- function(input, output, session) {
-
-  #change the value of subtopic_1 in function of the value of topic  
+  
   observeEvent(input$topic, {
+      #look if there is something in SubTopic1
       choices <- unique(goalD[goalD$Topic == input$topic, list(SubTopic1)])
       
+      #change the value of subtopic_1 in function of the value of topic  
       updateSelectInput(
       session,
       inputId = "subtopic_1",
       choices = choices
-    )
+      )
   })
   
   observeEvent(input$subtopic_1, {
+    #look if there is something in SubTopic2
     choices <- unique(goalD[goalD$SubTopic1 == input$subtopic_1, list(SubTopic2)])
     
-    updateSelectInput(
-      session,
-      inputId = "subtopic_2",
-      choices = choices
-    )
+    not_value_subtopic_2 = as.vector(is.na(choices[1]))
+  
+    #change the value of subtopic_2 in function of the value of topic
+    if(not_value_subtopic_2) {
+      updateSelectInput(
+        session,
+        inputId = "subtopic_2",
+        choices = ''
+      )
+      
+      updateSelectInput(
+        session,
+        inputId = "subtopic_3",
+        choices = ''
+      )
+      
+      #find indicator list
+      updateSelectInput(
+        session,
+        inputId = "indicator",
+        choices = unique(goalD[goalD$SubTopic1 == input$subtopic_1, list(Series_Name.x)])
+      )
+      #
+      
+    }
+    else {
+      updateSelectInput(
+        session,
+        inputId = "subtopic_2",
+        choices = choices
+      )
+    }
+      
   })
   
   observeEvent(input$subtopic_2, {
+    #look if there is something in SubTopic3
     choices <- unique(goalD[goalD$SubTopic2 == input$subtopic_2, list(SubTopic3)])
     
-    updateSelectInput(
-      session,
-      inputId = "subtopic_3",
-      choices = choices
-    )
-  })
-  
-  
-  
-  observeEvent(input$selected_class, {
-    if(input$selected_class =="Brand") {
-      choices <- c("a", "b", "c")
-    } else if(input$selected_class =="Brand1") {
-      choices <- c("1", "2", "3")
-    } else {
-      choices <- c("x", "y", "z")
+    not_value_subtopic_3 = as.vector(is.na(choices[1]))
+    
+    #change the value of subtopic_2 in function of the value of topic
+    if(not_value_subtopic_3) {
+      updateSelectInput(
+        session,
+        inputId = "subtopic_3",
+        choices = ''
+      )
+      
+      #find indicator list
+      updateSelectInput(
+        session,
+        inputId = "indicator",
+        choices = unique(goalD[goalD$SubTopic2 == input$subtopic_2, list(Series_Name.x)])
+      )
+      #
+      
     }
-    updatePickerInput(
-      session,
-      inputId = "selected_product",
-      choices = choices
-    )
+    else {
+      updateSelectInput(
+        session,
+        inputId = "subtopic_3",
+        choices = choices
+      )
+      
+      #find indicator list
+      updateSelectInput(
+        session,
+        inputId = "indicator",
+        choices = unique(goalD[goalD$SubTopic3 == input$subtopic_3, list(Series_Name.x)])
+      )
+      #
+    }
+    
   })
   
+  observeEvent(input$subtopic_3, {})
   
   
   
@@ -188,7 +220,7 @@ server <- function(input, output, session) {
     
     p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
     
-    ggplot(PlotDT[`Country_Name`==input$country &`Series_Name.x`=="Agricultural machinery, tractors"],
+    ggplot(PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator],
            aes(x= Date, y = Value)) + 
       geom_line() + scale_x_date(limits = input$date_choice) + p
     
