@@ -1,67 +1,155 @@
 ##Exercice : Shiny Deaths from Covid-19
-#Load Library
-library(shiny)
-library(magrittr)
-library(data.table)
-library(ggplot2)
-library(readr)
+
+#Test leaflet
+r_colors <- rgb(t(col2rgb(colors()) / 255))
+names(r_colors) <- colors()
+
+#global_scope
+selected_country <- unique(PlotDT$Country_Name)
+selected_topic <- unique(goalD$Topic)
+selected_subtopic_1 <- list()
+selected_subtopic_2 <- list()
+selected_subtopic_3 <- list()
 
 
-# import data
-urlfile="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
-coronaD<-urlfile%>% url %>% read_csv %>% as.data.table 
-# Function
-Dates<-colnames(coronaD[,-c(1:4)])
-setDT(coronaD)
-PlotDT = melt(coronaD, id.vars = 1:4, measure.vars = Dates, variable.name = "Date",value.name = "Dead")
-PlotDT$Date = PlotDT$Date %>% as.Date(format = "%m/%d/%y")
-SelectedCountries = c("France","Italy","Spain","Germany")
+
+#Define Panel
+mainPanel(
+  tabsetPanel(
+    tabPanel("Plot", plotOutput("displot")),
+    tabPanel("Map", leafletOutput("mymap")),
+  )
+)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-    
-    # Give the page a title
-    titlePanel("Death from Covid"),
-
-    # Generate a row with a sidebar
-    sidebarLayout(      
-        
-        # Define the sidebar with one input
-        sidebarPanel(
-            selectInput("countryregion", "Country/Region:", 
-                        choices=SelectedCountries),
-            hr(),
-            helpText("Data from CSSEGIS and Data JH")
-        ),
-        
-        # Create a spot for the barplot
-        mainPanel(
-            plotOutput("countryPlot")  
-        )
-        
+  
+  titlePanel(
+    # app title/description
+    h1("MGD"),
+  ),
+  
+  mainPanel(
+    tabsetPanel(
+      tabPanel("Plot", 
+               
+               
+               
+               sidebarLayout(
+                 sidebarPanel(
+                   helpText("Here you can find some graphical information
+                     about World Development Goals"),
+                   br(), 
+                   helpText("First, choose the World Development Indicators."),
+                   br(), 
+                   
+                   # inputs
+                   selectInput("topic", 
+                               h2("Choose a topic", align = "center"),
+                               selected_topic, 
+                               "Environment"),
+                   
+                   br(), 
+                   
+                   selectInput("subtopic_1", 
+                               h2("Choose a subtopic 1", align = "center"),
+                               selected_subtopic_1, 
+                               choices = NULL),
+                   
+                   br(), 
+                   
+                   selectInput("subtopic_2", 
+                               h2("Choose a subtopic 2", align = "center"),
+                               selected_subtopic_2, 
+                               choices = NULL),
+                   
+                   br(), 
+                   
+                   selectInput("subtopic_3", 
+                               h2("Choose a subtopic 3", align = "center"),
+                               selected_subtopic_3, 
+                               choices = NULL),
+                   
+                   br(), 
+                   
+                   selectInput("country", 
+                               h2("Choose a country", align = "center"),
+                               selected_country, 
+                               "France"),
+                   br(),
+                   
+                   radioButtons("y_axis_choice", 
+                                h2("Axis :", align = "center"), 
+                                c("linear", "logarithmic")), 
+                   
+                   br(), 
+                   
+                   dateRangeInput("date_choice", 
+                                  h2("Choose a date range :", align="center"),
+                                  format = "yyyy",
+                                  start="1972"),
+                   
+                   br(),
+                   p(strong("Full data is available just below."), style="strong"),
+                   br(),
+                   a(strong("DATA AVAILABLE HERE"), href="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"),
+                   br(),
+                   img(src="https://i1.wp.com/www.un.org/sustainabledevelopment/wp-content/uploads/2015/12/english_SDG_17goals_poster_all_languages_with_UN_emblem_1.png?fit=728%2C451&ssl=1", height = 72, width = 72, style="margin-left:80px"),
+                   
+                   
+                 ),
+                 # outputs
+                 plotOutput("displot"), 
+                 
+                 
+                 
+                 
+               ),
+               tabPanel("Map", leafletOutput("mymap"),
+                        p(),
+                        actionButton("recalc", "New points")
+               ),
+      )
     )
+    
+    
+    
+    
+    
+  )
 )
+
 
 
 #  Define a server for the Shiny app
 server <- function(input, output) {
-    # Fill in the spot we created for a plot
-    output$countryPlot <- renderPlot({
-        # Render the plot
-      
-        
-PlotDT[`Country/Region` %in% SelectedCountries & is.na(`Province/State`)] %>% ggplot(aes(x = Date, y = Dead)) +
-            geom_line(data = PlotDT[`Country/Region` == "France" & is.na(`Province/State`)])+
-            geom_line(data = PlotDT[`Country/Region` == "Germany"])+
-            geom_line(data = PlotDT[`Country/Region` == "Italy"])+
-            geom_line(data = PlotDT[`Country/Region` == "Spain"])+
-            geom_line(data = PlotDT[`Country/Region` == input$countryregion & is.na(`Province/State`)], color = 'red')
-        
-        
-        
-        
-    })
+  points <- eventReactive(input$recalc, {
+    cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
+  }, ignoreNULL = FALSE)
+  
+  output$displot <- renderPlot({
+    
+    p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
+    
+    ggplot(PlotDT[`Country_Name`==input$country &`Series_Name.x`=="Agricultural machinery, tractors"],
+           aes(x= Date, y = Value)) + 
+      geom_line() + scale_x_date(limits = input$date_choice) + p})
+  
+  
+  
+  
+  
+  output$mymap <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$Stamen.TonerLite,
+                       options = providerTileOptions(noWrap = TRUE)
+      ) %>%
+      addMarkers(data = points())
+  })
+  
 }
+
+
 
 
 # Run the application 
