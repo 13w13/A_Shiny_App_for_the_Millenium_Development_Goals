@@ -1,9 +1,6 @@
 ##Exercice : Shiny Deaths from Covid-19
 
-#Test leaflet
-r_colors <- rgb(t(col2rgb(colors()) / 255))
-names(r_colors) <- colors()
-
+library(shiny)
 #global_scope
 selected_country <- unique(PlotDT$Country_Name)
 selected_topic <- unique(goalD$Topic)
@@ -11,31 +8,15 @@ selected_subtopic_1 <- list()
 selected_subtopic_2 <- list()
 selected_subtopic_3 <- list()
 
-
-
-#Define Panel
-mainPanel(
-  tabsetPanel(
-    tabPanel("Plot", plotOutput("displot")),
-    tabPanel("Map", leafletOutput("mymap")),
-  )
-)
-
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  
-  titlePanel(
-    # app title/description
-    h1("MGD"),
-  ),
-  
-  mainPanel(
-    tabsetPanel(
-      tabPanel("Plot", 
+  # App title
+  titlePanel(h1("MGD")),
+
                
-               
-               
+  # Sidebar layout with input and output definitions
                sidebarLayout(
+      # Sidebar panel for inputs
                  sidebarPanel(
                    helpText("Here you can find some graphical information
                      about World Development Goals"),
@@ -43,12 +24,12 @@ ui <- fluidPage(
                    helpText("First, choose the World Development Indicators."),
                    br(), 
                    
-                   # inputs
+                   # inputs : select topics, subtopics, indicators etc...
                    selectInput("topic", 
                                h2("Choose a topic", align = "center"),
                                selected_topic, 
                                "Environment"),
-                   
+                   # br() element to introduce extra vertical spacing 
                    br(), 
                    
                    selectInput("subtopic_1", 
@@ -98,59 +79,89 @@ ui <- fluidPage(
                    
                    
                  ),
-                 # outputs
-                 plotOutput("displot"), 
                  
+          # Main panel for displaying outputs
+                 mainPanel(
                  
-                 
-                 
-               ),
-               tabPanel("Map", leafletOutput("mymap"),
-                        p(),
-                        actionButton("recalc", "New points")
-               ),
-      )
-    )
-    
-    
-    
-    
-    
+                   # Output: Tabset w/ plot, summary, and table ----   
+                
+                   tabsetPanel(type = "tabs",
+                               tabPanel("plot",plotOutput("plot")),
+                          
   )
+)
+)
 )
 
 
 
 #  Define a server for the Shiny app
-server <- function(input, output) {
-  points <- eventReactive(input$recalc, {
-    cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
-  }, ignoreNULL = FALSE)
+server <- function(input, output, session) {
   
-  output$displot <- renderPlot({
+  #change the value of subtopic_1 in function of the value of topic  
+  observeEvent(input$topic, {
+    choices <- unique(goalD[goalD$Topic == input$topic, list(SubTopic1)])
+    
+    updateSelectInput(
+      session,
+      inputId = "subtopic_1",
+      choices = choices
+    )
+  })
+  
+  observeEvent(input$subtopic_1, {
+    choices <- unique(goalD[goalD$SubTopic1 == input$subtopic_1, list(SubTopic2)])
+    
+    updateSelectInput(
+      session,
+      inputId = "subtopic_2",
+      choices = choices
+    )
+  })
+  
+  observeEvent(input$subtopic_2, {
+    choices <- unique(goalD[goalD$SubTopic2 == input$subtopic_2, list(SubTopic3)])
+    
+    updateSelectInput(
+      session,
+      inputId = "subtopic_3",
+      choices = choices
+    )
+  })
+  
+  
+  
+  observeEvent(input$selected_class, {
+    if(input$selected_class =="Brand") {
+      choices <- c("a", "b", "c")
+    } else if(input$selected_class =="Brand1") {
+      choices <- c("1", "2", "3")
+    } else {
+      choices <- c("x", "y", "z")
+    }
+    updatePickerInput(
+      session,
+      inputId = "selected_product",
+      choices = choices
+    )
+  })
+  
+  
+  output$plot <- renderPlot({
     
     p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
     
     ggplot(PlotDT[`Country_Name`==input$country &`Series_Name.x`=="Agricultural machinery, tractors"],
            aes(x= Date, y = Value)) + 
-      geom_line() + scale_x_date(limits = input$date_choice) + p})
-  
-  
-  
-  
-  
-  output$mymap <- renderLeaflet({
-    leaflet() %>%
-      addProviderTiles(providers$Stamen.TonerLite,
-                       options = providerTileOptions(noWrap = TRUE)
-      ) %>%
-      addMarkers(data = points())
+      geom_line() + scale_x_date(limits = input$date_choice) + p
+    
   })
   
 }
 
 
 
-
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+hist
