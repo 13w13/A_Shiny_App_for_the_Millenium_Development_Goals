@@ -118,7 +118,19 @@ ui <- fluidPage(
 #  Define a server for the Shiny app
 server <- function(input, output, session) {
   
+  #remise a zero de l'indicator
+  
   observeEvent(input$topic, {
+      #find indicator list
+      updateSelectInput(
+        session,
+        inputId = "indicator",
+        choices = ''
+      )
+      #
+    
+    
+    
       #look if there is something in SubTopic1
       choices <- unique(goalD[goalD$Topic == input$topic, list(SubTopic1)])
       
@@ -177,6 +189,7 @@ server <- function(input, output, session) {
     
     #change the value of subtopic_2 in function of the value of topic
     if(not_value_subtopic_3) {
+      print("bonjour")
       updateSelectInput(
         session,
         inputId = "subtopic_3",
@@ -193,12 +206,18 @@ server <- function(input, output, session) {
       
     }
     else {
+      print("au revoir")
       updateSelectInput(
         session,
         inputId = "subtopic_3",
         choices = choices
       )
-      
+    }
+    
+  })
+  
+  observeEvent(input$subtopic_3, {
+    if (input$subtopic_3 != '') {
       #find indicator list
       updateSelectInput(
         session,
@@ -207,10 +226,7 @@ server <- function(input, output, session) {
       )
       #
     }
-    
   })
-  
-  observeEvent(input$subtopic_3, {})
   
   
   
