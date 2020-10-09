@@ -182,6 +182,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$subtopic_2, {
+    if (input$subtopic_2 != '') {
     #look if there is something in SubTopic3
     choices <- unique(goalD[goalD$SubTopic2 == input$subtopic_2, list(SubTopic3)])
     
@@ -212,6 +213,7 @@ server <- function(input, output, session) {
         inputId = "subtopic_3",
         choices = choices
       )
+    }
     }
     
   })
