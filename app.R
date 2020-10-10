@@ -35,7 +35,7 @@ selected_subtopic_2 <- list()
 selected_subtopic_3 <- list()
 selected_indicator <- list()
 selected_aggregation<-unique(colnames(Country_break[,2:5]))
-Plot_choices<-vector(mode="character",length=1)
+Plot_choices<-PlotDT_Region#Initizalise
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -126,9 +126,20 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   #Store aggregation selected
-  #Tried with ObserveEvent Update but
+  #Try whit ObservedEvent and stock change in new datatable
   
- 
+  observeEvent(input$aggregation, {
+    isolate({
+    if(input$aggregation =="Region") {
+      Plot_choices <- PlotDT_Region
+    } else if(input$aggregation =="Income_group") {
+      Plot_choices <- PlotDT_Income_group
+    } else {
+      Plot_choices <- PlotDT_Other
+    }
+    })
+  }
+  )
 
   #remise a zero de l'indicator
   
@@ -242,16 +253,18 @@ server <- function(input, output, session) {
     }
   })
   
+
+  
   #add condition if selected : aggregation view or single view (donc 2 groupe de plot)
 
   output$displot <- renderPlotly({
     
     p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
   
-    q<-ggplot() +geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], aes(x=Date, y=Value,colour="Selected Country"))+ geom_line(data=PlotDT_Income_group[`Series_Name.x`==input$indicator], aes(x= Date, y = Value, colour = `Income_group`)) + p
+    q<-ggplot() +geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], aes(x=Date, y=Value,colour="Selected Country"))+ geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], aes(x= Date, y = Value, colour = `Region`)) + p
     ggplotly(q)
-})
 
+})
 }
 
 
