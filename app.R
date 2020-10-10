@@ -24,6 +24,7 @@ library(httr)
 library(readxl)
 library(stringr)
 library(shinyWidgets)
+library(plotly)
 
   
 #global_scope
@@ -33,7 +34,8 @@ selected_subtopic_1 <- list()
 selected_subtopic_2 <- list()
 selected_subtopic_3 <- list()
 selected_indicator <- list()
-
+selected_aggregation<-unique(colnames(Country_break[,2:5]))
+Plot_choices<-vector(mode="character",length=1)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -84,6 +86,11 @@ ui <- fluidPage(
                   h2("Choose a country", align = "center"),
                   selected_country, 
                   "France"),
+      br(), 
+      selectInput("aggregation", 
+                  h2("Choose an aggregation view", align = "center"),
+                  choices=selected_aggregation),
+
       br(),
       radioButtons("y_axis_choice", 
                    h2("Axis :", align = "center"), 
@@ -106,7 +113,7 @@ ui <- fluidPage(
     ),
     mainPanel(
       # outputs
-      plotOutput("displot"), 
+      (plotlyOutput("displot")), 
       
       plotOutput("summary"),
       
@@ -118,6 +125,11 @@ ui <- fluidPage(
 #  Define a server for the Shiny app
 server <- function(input, output, session) {
   
+  #Store aggregation selected
+  #Tried with ObserveEvent Update but
+  
+ 
+
   #remise a zero de l'indicator
   
   observeEvent(input$topic, {
@@ -230,22 +242,17 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  
-  
-  
-  output$displot <- renderPlot({
+  #add condition if selected : aggregation view or single view (donc 2 groupe de plot)
+
+  output$displot <- renderPlotly({
     
     p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
-    
-    ggplot(PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator],
-           aes(x= Date, y = Value)) + 
-      geom_line() + scale_x_date(limits = input$date_choice) + p
-    
-  })
   
+    q<-ggplot() +geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], aes(x=Date, y=Value,colour="Selected Country"))+ geom_line(data=PlotDT_Income_group[`Series_Name.x`==input$indicator], aes(x= Date, y = Value, colour = `Income_group`)) + p
+    ggplotly(q)
+})
+
 }
-  
 
 
 
