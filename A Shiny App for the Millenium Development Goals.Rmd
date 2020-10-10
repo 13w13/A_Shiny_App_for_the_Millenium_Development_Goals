@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Navigation {.tabset .tabset-fade .tabset-pills}
 ## 1. Introduction
 
+
 ### 1.1 Aim of the Group Project from U3-Programming-Advanced R-Msc AI and BA - TBS
 - The aim of the project is to make an interactive graphical presentation of data using Shiny App.
 - The user should be able to select parameters themselves. The data must be non-trivial, requiring the use of data from several sources or from several different tables.
@@ -400,7 +401,7 @@ PlotDT_Region =  data.table::melt(mean_region_goalD, id.vars = c(1,2),
 ```
 Change data type
 ```{r}
-PlotDT_Region$Date = PlotDT_region_mean$Date%>%  as.Date(format = "%Y")
+PlotDT_Region$Date = PlotDT_Region$Date%>%  as.Date(format = "%Y")
 ```
 
 
@@ -453,9 +454,6 @@ Good good one
 
 input user: choix de l'aggregation
 Donc dans geo_line : data=PloDT_$userimput1["Series_Name.x"==$userinput] avec colour=$userinput1
-```{r}
-
-```
 
 ```{r}
 ggplot() +
@@ -474,6 +472,14 @@ ggplot() +
       geom_line(data=PlotDT[`Country_Name`=="China" &`Series_Name.x`=="GDP (current US$)"], aes(x=Date, y=Value,colour=" Selected Country"))+ geom_line(data=PlotDT_Income_group[`Series_Name.x`=="GDP (current US$)"], aes(x= Date, y = Value,colour = `Income_group`))
 
 ```
+
+```{r}
+ggplot() +
+      geom_line(data=PlotDT[`Country_Name`=="China" &`Series_Name.x`=="GDP (current US$)"], aes(x=Date, y=Value,colour=" Selected Country"))+ geom_line(data=PlotDT_Income_group[`Series_Name.x`=="GDP (current US$)"], aes(x= Date, y = Value,colour = `Income_group`))
+
+```
+
+
 
 
 
