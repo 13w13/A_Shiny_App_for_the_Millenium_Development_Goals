@@ -179,8 +179,14 @@ We use Get function since readxl doesn't support http download yet.
 GET(urlfile_WDI_break, write_disk(tf <- tempfile(fileext = ".xls")))
 WDI_break <- read_xls(tf, sheet=2) %>% as.data.table 
 head(WDI_break)
-```
+WDI_break %>% View
+goalD %>% View
+goalD_join <- merge(goalD,WDI_break, by.x = 'Series_Code', by.y = 'Series Code', all.x=FALSE) 
 
+goalD_join %>% View
+
+```
+Series Code en miniscule et nombres pas reconnues 
 =>Create a function which matches Series Code and copy for the row associated Topic, SubTopic1 and SupTopic2. 
 Void if doesn't match. 
 
@@ -215,6 +221,8 @@ PlotDT = data.table::melt(goalD, id.vars = c(1,38,39,40),
           measure.vars = Dates, 
           variable.name = "Date",
           value.name = "Value")
+
+PlotDT %>% View()
 ```
 
 
@@ -224,6 +232,8 @@ Change the data type of the Date column to "Date" using the function as.Date()
 
 PlotDT$Date = PlotDT$Date %>%  as.Date(format = "%Y")
 head(PlotDT$Date)
+
+
 ```
 as.date needs day and month. Here create fake days and month : valid solution ?
 
