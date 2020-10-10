@@ -320,10 +320,55 @@ goalD[Country_Name=="France"] %>% head
 
 
 
+#2.4 Aggregation View 
+
+### 2.4.1 Create mean of each Region each Year
+The input in the for indicator will be an user input
+
+
+```{r}
+mean_region_goalD=goalD[, lapply(.SD, mean, na.rm=TRUE), by=list(Region,Series_Name.x),.SDcols=c("1972","1973","1974","1975","1976","1977","1978","1979","1980","1981","1982","1983","1984","1985","1986","1987","1988","1989","1990","1991","1992","1993","1994","1995","1996","1997","1998","1999","2000","2001","2002","2003","2004","2005","2006","2007") ]
+```
+
+#Verfiy results : compute the mean in goalD for the 1972 year, Region South Asia for the GDP and compare with the mean_regio_goald value. 
+```{r}
+sum(goalD[Region=="South Asia"&Series_Name.x=="GDP (current US$)"][,4],na.rm=TRUE)/6
+mean_region_goalD[Region=="South Asia"&Series_Name.x=="GDP (current US$)"][,3]
+```
+
+
+
+### 2.4.2 For mean_income_goalD
+```{r}
+mean_income_goalD=goalD[, lapply(.SD, mean, na.rm=TRUE), by=list(Income_group,Series_Name.x),.SDcols=c("1972","1973","1974","1975","1976","1977","1978","1979","1980","1981","1982","1983","1984","1985","1986","1987","1988","1989","1990","1991","1992","1993","1994","1995","1996","1997","1998","1999","2000","2001","2002","2003","2004","2005","2006","2007") ]
+mean_income_goalD %>% tail
+```
+
+#Verify results 2 
+```{r}
+
+sum(goalD[Income_group=="Low income"&Series_Name.x=="GDP (current US$)"][,4],na.rm=TRUE)/20
+mean_income_goalD[Income_group=="Low income"&Series_Name.x=="GDP (current US$)"][,3]
+
+```
+We are good ! 
+### 2.4.3 For mean_lending_goalD
+```{r}
+mean_lending_goalD=goalD[, lapply(.SD, mean, na.rm=TRUE), by=list(Lending_category,Series_Name.x),.SDcols=c("1972","1973","1974","1975","1976","1977","1978","1979","1980","1981","1982","1983","1984","1985","1986","1987","1988","1989","1990","1991","1992","1993","1994","1995","1996","1997","1998","1999","2000","2001","2002","2003","2004","2005","2006","2007") ]
+mean_lending_goalD %>% head
+```
+
+### 2.4.4 For mean_other_goalD
+```{r}
+mean_other_goalD=goalD[, lapply(.SD, mean, na.rm=TRUE), by=list(Other,Series_Name.x),.SDcols=c("1972","1973","1974","1975","1976","1977","1978","1979","1980","1981","1982","1983","1984","1985","1986","1987","1988","1989","1990","1991","1992","1993","1994","1995","1996","1997","1998","1999","2000","2001","2002","2003","2004","2005","2006","2007") ]
+mean_other_goalD %>% head
+```
+
+
 ##3 Creating plots
-3.1 Casting from a wide table to a long table:
+### 3.1 Casting from a wide table to a long table:
 
-
+3.1.1 For goalD table
 ```{r}
 PlotDT = data.table::melt(goalD, id.vars = c(1,2,3,40,41,42,43,44,45,46,47,48,49), 
           measure.vars = Dates, 
@@ -341,56 +386,99 @@ Change the data type of the Date column to "Date" using the function as.Date()
 PlotDT$Date = PlotDT$Date %>%  as.Date(format = "%Y")
 head(PlotDT$Date)
 
+```
+as.date needs day and month. Here create fake days and month.
+
+### 3.1.2 For mean_region_goalD
+
+
+```{r}
+PlotDT_Region =  data.table::melt(mean_region_goalD, id.vars = c(1,2), 
+          measure.vars = Dates, 
+          variable.name = "Date",
+          value.name = "Value")
+```
+Change data type
+```{r}
+PlotDT_Region$Date = PlotDT_region_mean$Date%>%  as.Date(format = "%Y")
+```
+
+
+### 3.1.3 For mean_income_goalD
+
+```{r}
+PlotDT_Income_group=  data.table::melt(mean_income_goalD, id.vars = c(1,2), 
+          measure.vars = Dates, 
+          variable.name = "Date",
+          value.name = "Value")
+```
+Change data type
+```{r}
+PlotDT_Income_group$Date = PlotDT_Income_group$Date%>%  as.Date(format = "%Y")
+```
+```{r}
+PlotDT_Income_group%>% head
 
 ```
-as.date needs day and month. Here create fake days and month : valid solution ?
 
 
-=> Ok for now otherwise solution : 
-D$year <- format(as.Date(D$date), format = "%Y") 
-library(lubridate)
-year(df1$Date)
+### 3.1.4 For mean_lending_goalD
+```{r}
+PlotDT_Lending_category=  data.table::melt(mean_lending_goalD, id.vars = c(1,2), 
+          measure.vars = Dates, 
+          variable.name = "Date",
+          value.name = "Value")
+```
+Change data type
+```{r}
+PlotDT_Lending_category$Date = PlotDT_Lending_category$Date%>%  as.Date(format = "%Y")
+```
+### 3.1.4 For mean_other_goalD
+```{r}
+PlotDT_Other=  data.table::melt(mean_other_goalD, id.vars = c(1,2), 
+          measure.vars = Dates, 
+          variable.name = "Date",
+          value.name = "Value")
+```
+Change data type
+```{r}
+PlotDT_Other$Date = PlotDT_Other$Date%>%  as.Date(format = "%Y")
+```
 
 
 ###3.2 Create basic Plot
-Select a subset of PlotDT with Country_Name==China as and Series_Name Agricultural machinery, tractors
-```{r}
-ggplot(PlotDT[`Country_Name`=="China" &`Series_Name.x`=="Agricultural machinery, tractors"],
-       aes(x= Date, y = Value)) + 
-   geom_line()
 
-```
 
-```{r}
-PlotDT[`Country_Name`=="China" & `Series_Name.x`=="Agricultural machinery, tractors"]
-```
+Good good one
 
-Test subTopic1
+input user: choix de l'aggregation
+Donc dans geo_line : data=PloDT_$userimput1["Series_Name.x"==$userinput] avec colour=$userinput1
 ```{r}
-ggplot(PlotDT[`Country_Name`=="China" &`SubTopic1`=="Agricultural production"],
-       aes(x= Date, y = Value)) + 
-   geom_line()
+
 ```
 
 ```{r}
-PlotDT[`Country_Name`=="China"&`SubTopic1`=="Agricultural production"]
+ggplot() +
+      geom_line(data=PlotDT[`Country_Name`=="Afghanistan" &`Series_Name.x`=="GDP (current US$)"], aes(x=Date, y=Value,colour=" Selected Country"))+ geom_line(data=PlotDT_Region[`Series_Name.x`=="GDP (current US$)"], aes(x= Date, y = Value,colour = `Region`))
+
 ```
 
 
+
+#add metrics + view value for yeach year (shiny app)
+
+
+#Test autre aggre : income group
 ```{r}
-PlotDT %>% head
-PlotDT$Series_Code
-```
-
-
-
-This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
-
-To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+ggplot() +
+      geom_line(data=PlotDT[`Country_Name`=="China" &`Series_Name.x`=="GDP (current US$)"], aes(x=Date, y=Value,colour=" Selected Country"))+ geom_line(data=PlotDT_Income_group[`Series_Name.x`=="GDP (current US$)"], aes(x= Date, y = Value,colour = `Income_group`))
 
 ```
+
+
 
 ## Embedded Application
+
 
 It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
 
@@ -409,4 +497,3 @@ You can also use the `shinyApp` function to define an application inline rather 
 In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
 
 
-#analyse discriminante des indicateurs
