@@ -78,8 +78,8 @@ ui <- fluidPage(
                   choices = NULL),
       
       br(), 
-      
-      checkboxGroupInput("country", 
+ 
+    selectInput("country", 
                   h2("Choose a country", align = "center"),
                   selected_country, 
                   "France"),
