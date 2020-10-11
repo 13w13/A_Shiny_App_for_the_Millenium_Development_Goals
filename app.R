@@ -5,9 +5,9 @@
 #Mettre menu selection sur le haut : alexandra 
 
 #histro : aggregation proporitonelle avec les indicateurs (virer pays)
-#map : antoine et alexandra. Chorolèptre
+#map : antoine et alexandra. Choroleptre
 
-#(à la fin) Side panel : couper à pays pour mettre à droite. 
+#(a la fin) Side panel : couper a pays pour mettre a droite. 
 
 
 #library
@@ -22,6 +22,7 @@ library(stringr)
 library(shinyWidgets)
 library(plotly)
 library(dplyr)
+library(shinythemes)
 
   
 #global_scope
@@ -35,37 +36,37 @@ selected_aggregation<-unique(colnames(Country_break[,2:5]))
 Plot_choices<-PlotDT_Region#Initizalise
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("cosmo"),
   #CSS
-  tags$head(
-    tags$style(HTML("
-      h1 {
-      font-family: 'Lobster', cursive;
-      font-weight: 500;
-      line-height: 1.1;
-      color: green;
-      }
+  #tags$head(
+    #tags$style(HTML("
+      #h1 {
+      #font-family: 'Lobster', cursive;
+      #font-weight: 500;
+      #line-height: 1.1;
+      #color: green;
+      #}
       
-      h2 {
-      font-family: 'Lobster', cursive;
-      font-weight: 500;
-      line-height: 1.1;
-      color: green;
-      }
+      #h2 {
+      #font-family: 'Lobster', cursive;
+      #font-weight: 500;
+      #line-height: 1.1;
+      #color: green;
+      #}
       
-      body {
-      background-color: #fff;
-      }
+      #body {
+      #background-color: #fff;
+      #}
       
-      .selectize-input {
-      min-height: 20px;
-      border: 0;
-      padding: 4px;
-      font-family: 'Lobster', cursive;
-      }
+      #.selectize-input {
+      #min-height: 20px;
+      #border: 0;
+      #padding: 4px;
+      #font-family: 'Lobster', cursive;
+      #}
       
-    "))
-  ),
+    #"))
+  #),
   
   titlePanel(
     # app title/description
@@ -286,16 +287,19 @@ server <- function(input, output, session) {
     
     Plot_choices <- switch(input$aggregation,"Region"=PlotDT_Region,
                            "Income_group"=PlotDT_Income_group,
-                           "Lending_Category"=PlotDT_Lending_category, 
+                           "Lending_category"=PlotDT_Lending_category, 
                            "Other"=PlotDT_Other)
     
+    color <- switch(input$aggregation,"Region"=PlotDT_Region,
+                    "Income_group"=PlotDT_Income_group,
+                    "Lending_category"=PlotDT_Lending_category, 
+                    "Other"=PlotDT_Other)
   
     q<-ggplot() +
       geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], 
                 aes(x=Date, y=Value,colour=input$country))+ 
       geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], 
-                aes(x= Date, y = Value, 
-                    colour = Region)) + 
+                aes_string("Date", "Value", colour = input$aggregation)) + 
       xlab("Dates")+
       ylab(input$indicator)+
       p
@@ -313,10 +317,7 @@ server <- function(input, output, session) {
                            "Income_group"=PlotDT_Income_group,
                            "Lending_Category"=PlotDT_Lending_category, 
                            "Other"=PlotDT_Other)
-    color <- switch(input$aggregation,"Region"=PlotDT_Region,
-                           "Income_group"=PlotDT_Income_group,
-                           "Lending_Category"=PlotDT_Lending_category, 
-                           "Other"=PlotDT_Other)
+
     
     q<-ggplot() +
       geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], 
