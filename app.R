@@ -317,24 +317,22 @@ server <- function(input, output, session) {
 })
   
   
+  
   output$displot2 <- renderPlotly({
-    
     p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
     
     Plot_choices <- switch(input$aggregation,"Region"=PlotDT_Region,
                            "Income_group"=PlotDT_Income_group,
                            "Lending_Category"=PlotDT_Lending_category, 
                            "Other"=PlotDT_Other)
-
     
-    q<-ggplot() +
-      geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], 
-                aes(x=Date, y=Value,colour=input$country))+ 
-      geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], 
-                aes(x= Date, y = Value, 
-                    colour = Region)) + p
+    q <- ggplot() + geom_bar(data=PlotDT[`Country_Name`==input$country 
+                                         &`Series_Name.x`==input$indicator], 
+                             aes(x=Date,y=Value, colour=input$country), stat="identity")+
+      geom_bar(data=Plot_choices[`Series_Name.x`==input$indicator], 
+               aes_string(x="Date",y="Value", colour=input$aggregation), stat="identity")
+    q
     
-    ggplotly(q)
     
   })
   
