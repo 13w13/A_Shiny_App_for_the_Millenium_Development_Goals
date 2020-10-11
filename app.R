@@ -67,9 +67,7 @@ ui <- fluidPage(
       padding: 4px;
       font-family: 'Lobster', cursive;
       }
-
-
-
+      
     "))
   ),
   
@@ -301,7 +299,10 @@ server <- function(input, output, session) {
                 aes(x=Date, y=Value,colour=input$country))+ 
       geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], 
                 aes(x= Date, y = Value, 
-                    colour = Region)) + p
+                    colour = Region)) + 
+      xlab("Dates")+
+      ylab(input$indicator)+
+      p
   
     ggplotly(q)
 
