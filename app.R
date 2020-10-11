@@ -317,11 +317,11 @@ server <- function(input, output, session) {
                            "Lending_Category"=PlotDT_Lending_category, 
                            "Other"=PlotDT_Other)
     
-     q <- ggplot() + geom_bar(data=PlotDT[`Country_Name`=="France" 
-                                         &`Series_Name.x`=="Agricultural machinery, tractors"], 
-                             aes(x=Date,y=Value, colour="France"), stat="identity")+
-      geom_bar(data=Plot_choices[`Series_Name.x`=="Agricultural machinery, tractors"], 
-               aes(x=Date,y=Value, colour=Region), stat="identity")
+     q <- ggplot() + geom_bar(data=PlotDT[`Country_Name`==input$country 
+                                         &`Series_Name.x`==input$indicator], 
+                             aes(x=Date,y=Value, colour=input$country), stat="identity")+
+      geom_bar(data=Plot_choices[`Series_Name.x`==input$indicator], 
+               aes(x=Date,y=Value, colour=input$aggregation), stat="identity")
     q
     
     
