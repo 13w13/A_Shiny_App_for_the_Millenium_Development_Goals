@@ -35,7 +35,7 @@ selected_indicator <- list()
 selected_aggregation<-unique(colnames(Country_break[,2:5]))
 Plot_choices<-PlotDT_Region#Initizalise
 selected_year<-colnames(goalD[, c(4:39)])
-map_df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
+#Code <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
 
 
 # Define UI for application that draws a histogram
@@ -363,14 +363,15 @@ server <- function(input, output, session) {
   #  p 
   #})
   
+  
   output$displot3 <- renderPlotly({
     agr_data <- PlotDT[year(Date) == input$year & 
                          Series_Name.x == input$indicator, 
                        list(Country_Name, Series_Name.x, Value)]
     
-    agr.map <- merge(agr_data, map_df,
+    agr.map <- merge(agr_data, Code_break,
                      by.x = 'Country_Name', 
-                     by.y = 'COUNTRY', all= FALSE)
+                     by.y = 'Economy', all= TRUE)
     
     agr.map <- as.data.table(agr.map)
     
@@ -389,7 +390,7 @@ server <- function(input, output, session) {
     
     fig <- fig %>% add_trace(
       z = ~Value, color = ~Value, colors = 'Greens',
-      text = ~Country_Name, locations = ~CODE, marker = list(line = l)
+      text = ~Country_Name, locations = ~Code, marker = list(line = l)
     )
     
     fig <- fig %>% colorbar(title = input$indicator, tickprefix = '$')
