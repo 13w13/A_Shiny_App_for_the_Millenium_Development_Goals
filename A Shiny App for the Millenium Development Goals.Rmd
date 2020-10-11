@@ -294,6 +294,8 @@ The Column E and the Row 6 from our excel file were empty. We can remove them.
 Furthermore, we can deleate Code information from our table and remplace space in colname by an inderscore. 
 
 ```{r}
+#Extract iso code for later map
+Code_break<-Country_break[,c(1,2)] %>% setDT
 Country_break<-Country_break[!1,!c(2,3)]
 colnames(Country_break) =  colnames(Country_break) %>% gsub(" ","_",.) 
 Country_break %>% head
@@ -377,9 +379,9 @@ mean_other_goalD=goalD[, lapply(.SD, mean, na.rm=TRUE), by=list(Other,Series_Nam
 mean_other_goalD %>% head
 ```
 
-## GeoCodig
-Missing good Geocoding in world Bank datast. 
-Using API for new data.table
+### 2.5 Geo Cod (finaly non used variable but keep steps for document)
+Missing Geocoding in world Bank dataset. How to build a map ? 
+Using WB API for new data.table
 
 ```{r}
 res = xmlParse("http://api.worldbank.org/v2/country")
