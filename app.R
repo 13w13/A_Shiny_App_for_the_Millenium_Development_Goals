@@ -25,6 +25,7 @@ library(readxl)
 library(stringr)
 library(shinyWidgets)
 library(plotly)
+library(dplyr)
 
   
 #global_scope
@@ -39,6 +40,39 @@ Plot_choices<-PlotDT_Region#Initizalise
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+  #CSS
+  tags$head(
+    tags$style(HTML("
+      h1 {
+      font-family: 'Lobster', cursive;
+      font-weight: 500;
+      line-height: 1.1;
+      color: green;
+      }
+      
+      h2 {
+      font-family: 'Lobster', cursive;
+      font-weight: 500;
+      line-height: 1.1;
+      color: green;
+      }
+      
+      body {
+      background-color: #fff;
+      }
+      
+      .selectize-input {
+      min-height: 20px;
+      border: 0;
+      padding: 4px;
+      font-family: 'Lobster', cursive;
+      }
+
+
+
+    "))
+  ),
+  
   titlePanel(
     # app title/description
     h1("Millenium Development Goals"),
@@ -89,7 +123,8 @@ ui <- fluidPage(
       br(), 
       selectInput("aggregation", 
                   h2("Choose an aggregation view", align = "center"),
-                  choices=selected_aggregation),
+                  selected_aggregation, 
+                  "Region"),
 
       br(),
       radioButtons("y_axis_choice", 
@@ -112,11 +147,12 @@ ui <- fluidPage(
   
     ),
     mainPanel(
-      # outputs
-      (plotlyOutput("displot")), 
       
-      plotOutput("summary"),
-      
+      tabsetPanel(type = "tabs",
+                  tabPanel(h3("GGPLOT"), (plotlyOutput("displot"))),
+                  tabPanel(h3("HISTO"), (plotlyOutput("displot2"))),
+                  tabPanel(h3("MAP"), plotOutput("displot3"))
+      )
     )
   )
 )
@@ -124,22 +160,6 @@ ui <- fluidPage(
 
 #  Define a server for the Shiny app
 server <- function(input, output, session) {
-  
-  #Store aggregation selected
-  #Try whit ObservedEvent and stock change in new datatable
-  
-  observeEvent(input$aggregation, {
-    isolate({
-    if(input$aggregation =="Region") {
-      Plot_choices <- PlotDT_Region
-    } else if(input$aggregation =="Income_group") {
-      Plot_choices <- PlotDT_Income_group
-    } else {
-      Plot_choices <- PlotDT_Other
-    }
-    })
-  }
-  )
   
   observeEvent(input$topic, {
     #remise a zero de l'indicator
@@ -149,8 +169,6 @@ server <- function(input, output, session) {
         choices = ''
       )
       #
-    
-    
     
       #look if there is something in SubTopic1
       choices <- unique(goalD[goalD$Topic == input$topic, list(SubTopic1)])
@@ -249,18 +267,92 @@ server <- function(input, output, session) {
     }
   })
   
-
+  
+  #Store aggregation selected
+  #Try whit ObservedEvent and stock change in new datatable
+  
+  #observeEvent(input$aggregation, {
+  #  isolate({
+  #  if(input$aggregation =="Region") {
+  #    Plot_choices <- PlotDT_Region
+  #  } else if(input$aggregation =="Income_group") {
+  #    Plot_choices <- PlotDT_Income_group
+  #  } else {
+  #    Plot_choices <- PlotDT_Other
+  #  }
+  #  })
+  #}
+  #)
   
   #add condition if selected : aggregation view or single view (donc 2 groupe de plot)
 
   output$displot <- renderPlotly({
     
     p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
+    
+    Plot_choices <- switch(input$aggregation,"Region"=PlotDT_Region,
+                           "Income_group"=PlotDT_Income_group,
+                           "Lending_Category"=PlotDT_Lending_category, 
+                           "Other"=PlotDT_Other)
+    
   
-    q<-ggplot() +geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], aes(x=Date, y=Value,colour="Selected Country"))+ geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], aes(x= Date, y = Value, colour = `Region`)) + p
+    q<-ggplot() +
+      geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], 
+                aes(x=Date, y=Value,colour=input$country))+ 
+      geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], 
+                aes(x= Date, y = Value, 
+                    colour = Region)) + p
+  
     ggplotly(q)
 
 })
+  
+  
+  output$displot2 <- renderPlotly({
+    
+    p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
+    
+    Plot_choices <- switch(input$aggregation,"Region"=PlotDT_Region,
+                           "Income_group"=PlotDT_Income_group,
+                           "Lending_Category"=PlotDT_Lending_category, 
+                           "Other"=PlotDT_Other)
+    
+    
+    q<-ggplot() +
+      geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], 
+                aes(x=Date, y=Value,colour=input$country))+ 
+      geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], 
+                aes(x= Date, y = Value, 
+                    colour = Region)) + p
+    
+    ggplotly(q)
+    
+  })
+  
+  output$displot3 <- renderPlot({
+    WorldData <- map_data('world') %>% filter(region != "Antarctica") %>% fortify
+    
+    df <- data.frame(region=input$country, 
+                     value=11, 
+                     stringsAsFactors=FALSE)
+    
+    p <- ggplot() +
+      geom_map(data = WorldData, map = WorldData,
+               aes(x = long, y = lat, group = group, map_id=region),
+               fill = "white", colour = "#7f7f7f", size=0.5) + 
+      geom_map(data = df, map=WorldData,
+               aes(fill=value, map_id=region),
+               colour="#7f7f7f", size=0.5) +
+      coord_map("rectangular", lat0=0, xlim=c(-180,180), ylim=c(-60, 90)) +
+      scale_fill_continuous(low="thistle2", high="darkred", guide="colorbar") +
+      scale_y_continuous(breaks=c()) +
+      scale_x_continuous(breaks=c()) +
+      labs(fill="legend", title="Title", x="", y="") +
+      theme_bw() +
+      ggtitle(paste("You choose : ", input$country))
+    
+    p 
+  })
 }
 
 
