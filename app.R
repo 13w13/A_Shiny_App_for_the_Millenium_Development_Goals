@@ -34,6 +34,9 @@ selected_subtopic_3 <- list()
 selected_indicator <- list()
 selected_aggregation<-unique(colnames(Country_break[,2:5]))
 Plot_choices<-PlotDT_Region#Initizalise
+selected_year<-colnames(goalD[, c(4:39)])
+map_df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme = shinytheme("cosmo"),
@@ -120,7 +123,13 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                   h2("Choose an aggregation view", align = "center"),
                   selected_aggregation, 
                   "Region"),
-
+      
+      br(), 
+      selectInput("year", 
+                  h2("Choose a year for the map (Page 3)", align = "center"),
+                  selected_year, 
+                  "1972"),
+      
       br(),
       radioButtons("y_axis_choice", 
                    h2("Axis :", align = "center"), 
@@ -146,7 +155,7 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
       tabsetPanel(type = "tabs",
                   tabPanel(h3("GGPLOT"), (plotlyOutput("displot"))),
                   tabPanel(h3("HISTO"), (plotlyOutput("displot2"))),
-                  tabPanel(h3("MAP"), plotOutput("displot3"))
+                  tabPanel(h3("MAP"), plotlyOutput("displot3"))
       )
     )
   )
@@ -262,7 +271,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
   #Store aggregation selected
   #Try whit ObservedEvent and stock change in new datatable
   
@@ -330,30 +338,75 @@ server <- function(input, output, session) {
     
   })
   
-  output$displot3 <- renderPlot({
-    WorldData <- map_data('world') %>% filter(region != "Antarctica") %>% fortify
+  #output$displot3 <- renderPlot({
+  #  WorldData <- map_data('world') %>% filter(region != "Antarctica") %>% fortify
+  #  
+  #  df <- data.frame(region=input$country, 
+  #                   value=11, 
+  #                   stringsAsFactors=FALSE)
+  #  
+  #  p <- ggplot() +
+  #    geom_map(data = WorldData, map = WorldData,
+  #             aes(x = long, y = lat, group = group, map_id=region),
+  #             fill = "white", colour = "#7f7f7f", size=0.5) + 
+  #    geom_map(data = df, map=WorldData,
+  #             aes(fill=value, map_id=region),
+  #             colour="#7f7f7f", size=0.5) +
+  #    coord_map("rectangular", lat0=0, xlim=c(-180,180), ylim=c(-60, 90)) +
+  #    scale_fill_continuous(low="thistle2", high="darkred", guide="colorbar") +
+  #    scale_y_continuous(breaks=c()) +
+  #    scale_x_continuous(breaks=c()) +
+  #    labs(fill="legend", title="Title", x="", y="") +
+  #    theme_bw() +
+  #    ggtitle(paste("You choose : ", input$country))
     
-    df <- data.frame(region=input$country, 
-                     value=11, 
-                     stringsAsFactors=FALSE)
+  #  p 
+  #})
+  
+  output$displot3 <- renderPlotly({
+    agr_data <- PlotDT[year(Date) == input$year & 
+                         Series_Name.x == input$indicator, 
+                       list(Country_Name, Series_Name.x, Value)]
     
-    p <- ggplot() +
-      geom_map(data = WorldData, map = WorldData,
-               aes(x = long, y = lat, group = group, map_id=region),
-               fill = "white", colour = "#7f7f7f", size=0.5) + 
-      geom_map(data = df, map=WorldData,
-               aes(fill=value, map_id=region),
-               colour="#7f7f7f", size=0.5) +
-      coord_map("rectangular", lat0=0, xlim=c(-180,180), ylim=c(-60, 90)) +
-      scale_fill_continuous(low="thistle2", high="darkred", guide="colorbar") +
-      scale_y_continuous(breaks=c()) +
-      scale_x_continuous(breaks=c()) +
-      labs(fill="legend", title="Title", x="", y="") +
-      theme_bw() +
-      ggtitle(paste("You choose : ", input$country))
+    agr.map <- merge(agr_data, map_df,
+                     by.x = 'Country_Name', 
+                     by.y = 'COUNTRY', all= FALSE)
     
-    p 
+    agr.map <- as.data.table(agr.map)
+    
+    
+    # light grey boundaries
+    l <- list(color = toRGB("grey"), width = 0.5)
+    
+    # specify map projection/options
+    g <- list(
+      showframe = FALSE,
+      showcoastlines = FALSE,
+      projection = list(type = 'Mercator')
+    )
+    
+    fig <- plot_geo(agr.map)
+    
+    fig <- fig %>% add_trace(
+      z = ~Value, color = ~Value, colors = 'Greens',
+      text = ~Country_Name, locations = ~CODE, marker = list(line = l)
+    )
+    
+    fig <- fig %>% colorbar(title = input$indicator, tickprefix = '$')
+    
+    fig <- fig %>% layout(
+      title = input$indicator,
+      geo = g
+    )
+    
+    fig
   })
+  
+  
+  
+  
+  
+  
 }
 
 
