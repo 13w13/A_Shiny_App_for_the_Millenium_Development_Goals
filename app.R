@@ -1,17 +1,13 @@
 ##Exercice : Shiny Deaths from Covid-19
 
-#resoudre le pb de selection sous variable (reactiv) : Antoine
-#rajouter region : Antoine
+#rajouter region : simon
 
-#Amelioration du ggplot : Alexandra et Julieva
-#Mettre menu selection sur le haut
-#Comparaison des graphiques : rajouter 
-#plusieurs courbes en fonction de la selection utilisateur
-#changement du nom de laxe des ordonnees en 
-#fonction de la metric 
+#Mettre menu selection sur le haut : alexandra 
 
-#rajouter deuxieme onglet : simon 
-#map
+#histro : aggregation proporitonelle avec les indicateurs (virer pays)
+#map : antoine et alexandra. Chorolèptre
+
+#(à la fin) Side panel : couper à pays pour mettre à droite. 
 
 
 #library
@@ -317,7 +313,10 @@ server <- function(input, output, session) {
                            "Income_group"=PlotDT_Income_group,
                            "Lending_Category"=PlotDT_Lending_category, 
                            "Other"=PlotDT_Other)
-    
+    color <- switch(input$aggregation,"Region"=PlotDT_Region,
+                           "Income_group"=PlotDT_Income_group,
+                           "Lending_Category"=PlotDT_Lending_category, 
+                           "Other"=PlotDT_Other)
     
     q<-ggplot() +
       geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], 
