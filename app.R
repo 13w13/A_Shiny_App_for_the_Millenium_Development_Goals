@@ -41,7 +41,7 @@ Plot_choices<-PlotDT_Region#Initizalise
 ui <- fluidPage(
   titlePanel(
     # app title/description
-    h1("MGD"),
+    h1("Millenium Development Goals"),
   ),
   sidebarLayout(
     sidebarPanel(
@@ -140,11 +140,9 @@ server <- function(input, output, session) {
     })
   }
   )
-
-  #remise a zero de l'indicator
   
   observeEvent(input$topic, {
-      #find indicator list
+    #remise a zero de l'indicator
       updateSelectInput(
         session,
         inputId = "indicator",
@@ -213,7 +211,6 @@ server <- function(input, output, session) {
     
     #change the value of subtopic_2 in function of the value of topic
     if(not_value_subtopic_3) {
-      print("bonjour")
       updateSelectInput(
         session,
         inputId = "subtopic_3",
@@ -230,7 +227,6 @@ server <- function(input, output, session) {
       
     }
     else {
-      print("au revoir")
       updateSelectInput(
         session,
         inputId = "subtopic_3",
