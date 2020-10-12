@@ -220,7 +220,16 @@ ui <- fluidPage(theme = "bootstrap.css",
       #)
       
       
-      plotlyOutput("displot4")
+      plotlyOutput("displot4"),
+      
+      
+      htmlOutput("text")
+      
+      #strong("Definition : "),
+      #(Long_definition),
+      #p(),
+      #strong("Source : "),
+      #(Source),
     )
   )
 )
@@ -228,6 +237,13 @@ ui <- fluidPage(theme = "bootstrap.css",
 
 #  Define a server for the Shiny app
 server <- function(input, output, session) {
+  
+  output$text<-renderUI({
+    
+    Long_definition<-paste("Definition : ",WDI_metadata[`Indicator Name`==input$indicator][,3])
+    Source<-paste("Source : ", WDI_metadata[`Indicator Name`==input$indicator][,4])
+    HTML(paste(Long_definition,Source,sep='<p/>'))
+  } )
   
   observeEvent(input$showpanel, {
     
