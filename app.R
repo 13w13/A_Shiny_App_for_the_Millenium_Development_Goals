@@ -23,6 +23,8 @@ library(shinyWidgets)
 library(plotly)
 library(dplyr)
 library(shinythemes)
+library(shinyjs)
+library(shinyBS)
 
   
 #global_scope
@@ -44,6 +46,7 @@ graph_value <- 0
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme = "bootstrap.css",
+                useShinyjs(),
   #CSS
   tags$head(
     tags$style(HTML("
@@ -89,99 +92,109 @@ ui <- fluidPage(theme = "bootstrap.css",
   br(),
   sidebarLayout(
     sidebarPanel(
+      id="Sidebar",
+      
       helpText("Here you can find some graphical information
                      about World Development Goals"),
-      br(), 
-      helpText("First, choose the World Development Indicators."),
-      br(), 
-      
-      # inputs
-      selectInput("topic", 
-                  h2("Choose a topic", align = "center"),
-                  selected_topic),
-      
-      br(), 
-      selectInput("subtopic_1", 
-                  h2("Choose a subtopic 1", align = "center"),
-                  selected_subtopic_1, 
-                  choices = NULL),
-      
-      br(), 
-      selectInput("subtopic_2", 
-                  h2("Choose a subtopic 2", align = "center"),
-                  selected_subtopic_2, 
-                  choices = NULL),
-      
-      br(), 
-      selectInput("subtopic_3", 
-                  h2("Choose a subtopic 3", align = "center"),
-                  selected_subtopic_3, 
-                  choices = NULL),
-      
-      br(), 
-      selectInput("indicator", 
-                  h2("Choose a indicator", align = "center"),
-                  selected_indicator, 
-                  choices = NULL),
-      
-      br(), 
-      
-      pickerInput("country",  h2("Choose a country", align = "center"), multiple = F,
-                  choices = selected_country,
-                  
-                  choicesOpt = list(content =  
-                                      mapply(selected_country, selected_flags, FUN = function(country, flagUrl) {
-                                        HTML(paste(
-                                          tags$img(src=flagUrl, width=20, height=15),
-                                          country
-                                        ))
-                                      }
-                                      
-                                      ))),
-      
-      
-      
-      #selectInput("country", 
-      #            h2("Choose a country", align = "center"),
-      #            selected_country, 
-      #            "France"),
-      
-      br(), 
-      awesomeRadio(inputId = "aggregation", 
-                   label = h2("Choose an aggregation view", align = "center"),
-                   selected_aggregation, 
-                   "Region",
-                   status="warning"),
-      
-      br(), 
-      selectInput("year", 
-                  h2("Choose a year for the map (Page 3)", align = "center"),
-                  selected_year, 
-                  "1972"),
-      
+      helpText("First, choose the World Development Indicators."), 
       br(),
-      awesomeRadio(
-        inputId = "y_axis_choice",
-        label = h2("Axis :", align = "center"),  
-        c("linear", "logarithmic"),
-        status = "success"
-      ), 
-      br(), 
-      dateRangeInput("date_choice", 
-                     h2("Choose a date range :", align="center"),
-                     format = "yyyy",
-                     start="1972"),
       
-      br(),
-      p(strong("Full data is available just below."), style="strong"),
-      br(),
-      a(strong("DATA AVAILABLE HERE"), href="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"),
-      br(),
-      img(src="https://i1.wp.com/www.un.org/sustainabledevelopment/wp-content/uploads/2015/12/english_SDG_17goals_poster_all_languages_with_UN_emblem_1.png?fit=728%2C451&ssl=1", height = 72, width = 72, style="margin-left:80px"),
-      br(), 
+      tabsetPanel(
+        tabPanel(h2("Page 1", style="color:black"),
+                 
+                 # inputs
+                 selectInput("topic", 
+                             h2("Choose a topic", align = "center"),
+                             selected_topic),
+                 
+                 br(), 
+                 selectInput("subtopic_1", 
+                             h2("Choose a subtopic 1", align = "center"),
+                             selected_subtopic_1, 
+                             choices = NULL),
+                 
+                 br(), 
+                 selectInput("subtopic_2", 
+                             h2("Choose a subtopic 2", align = "center"),
+                             selected_subtopic_2, 
+                             choices = NULL),
+                 
+                 br(), 
+                 selectInput("subtopic_3", 
+                             h2("Choose a subtopic 3", align = "center"),
+                             selected_subtopic_3, 
+                             choices = NULL),
+                 
+                 br(), 
+                 selectInput("indicator", 
+                             h2("Choose a indicator", align = "center"),
+                             selected_indicator, 
+                             choices = NULL),
+                 
+                 br(), 
+                 ),
+        tabPanel(h2("Page 2", style="color:black"),
+                 
+                 pickerInput("country",  h2("Choose a country", align = "center"), multiple = F,
+                             choices = selected_country,
+                             
+                             choicesOpt = list(content =  
+                                                 mapply(selected_country, selected_flags, FUN = function(country, flagUrl) {
+                                                   HTML(paste(
+                                                     tags$img(src=flagUrl, width=20, height=15),
+                                                     country
+                                                   ))
+                                                 }
+                                                 
+                                                 ))),
+                 
+                 
+                 
+                 #selectInput("country", 
+                 #            h2("Choose a country", align = "center"),
+                 #            selected_country, 
+                 #            "France"),
+                 
+                 br(), 
+                 awesomeRadio(inputId = "aggregation", 
+                              label = h2("Choose an aggregation view", align = "center"),
+                              selected_aggregation, 
+                              "Region",
+                              status="warning"),
+                 
+                 br(), 
+                 selectInput("year", 
+                             h2("Choose a year for the map (Page 3)", align = "center"),
+                             selected_year, 
+                             "1972"),
+                 
+                 br(),
+                 awesomeRadio(
+                   inputId = "y_axis_choice",
+                   label = h2("Axis :", align = "center"),  
+                   c("linear", "logarithmic"),
+                   status = "success"
+                 ), 
+ 
+                 dateRangeInput("date_choice", 
+                                h2("Choose a date range :", align="center"),
+                                format = "yyyy",
+                                start="1972"),
+                 
+                 br(),
+                 p(strong("Full data is available just below."), style="strong"),
+                 br(),
+                 a(strong("DATA AVAILABLE HERE"), href="https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"),
+                 br(),
+                 img(src="https://i1.wp.com/www.un.org/sustainabledevelopment/wp-content/uploads/2015/12/english_SDG_17goals_poster_all_languages_with_UN_emblem_1.png?fit=728%2C451&ssl=1", height = 72, width = 72, style="margin-left:80px"),
+                 br(), 
+                 )
+      ),
   
     ),
-    mainPanel(
+    mainPanel(id ="Main",
+              
+      bsButton("showpanel", strong("Show/hide sidebar"), type = "toggle", value = TRUE),
       
       radioGroupButtons(
         inputId = "graph",
@@ -198,10 +211,8 @@ ui <- fluidPage(theme = "bootstrap.css",
       #)
       
       
-      plotlyOutput("displot4"),
-      
-      
-      
+      plotlyOutput("displot4")
+    
     )
   )
 )
@@ -210,16 +221,24 @@ ui <- fluidPage(theme = "bootstrap.css",
 #  Define a server for the Shiny app
 server <- function(input, output, session) {
   
-  #observeEvent(input$graph, {
-    #print(input$graph)
-    #graph_value <<- switch(input$graph, "line"= "displot", "bar" = "displot2") 
-    #print(graph_value)
+  observeEvent(input$showpanel, {
     
-    #output$displot <- switch(input$graph, "line"= output$displot) 
-    
-    
-    
-  #})
+    if(input$showpanel == TRUE) {
+      removeCssClass("Main", "col-sm-12")
+      addCssClass("Main", "col-sm-8")
+      
+      shinyjs::show(id = "Sidebar")
+      shinyjs::enable(id = "Sidebar")
+      
+    }
+    else {
+      removeCssClass("Main", "col-sm-8")
+      addCssClass("Main", "col-sm-12")
+      shinyjs::hide(id = "Sidebar")
+      
+    }
+  
+  })
   
   observeEvent(input$topic, {
     #remise a zero de l'indicator
