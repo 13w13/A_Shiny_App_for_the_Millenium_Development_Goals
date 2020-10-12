@@ -394,6 +394,10 @@ server <- function(input, output, session) {
     
     agr.map <- as.data.table(agr.map)
     
+    idx = agr.map[, .I[which(is.na(Value))]]
+    
+    agr.map[idx, Value := 0]
+    
     
     # light grey boundaries
     l <- list(color = toRGB("grey"), width = 0.5)
