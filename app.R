@@ -91,6 +91,19 @@ ui <- fluidPage(theme = "bootstrap.css",
         font-family: 'Lobster', cursive;
       }
       
+       .fa {
+        color:#228B22;
+       }
+      
+       .fa {
+        color:#228B22;
+      }
+      
+      .fas {
+        color:#228B22;
+      }
+      
+      
     "))
   ),
   
@@ -203,13 +216,20 @@ ui <- fluidPage(theme = "bootstrap.css",
     ),
     mainPanel(id ="Main",
               
-      bsButton("showpanel", strong("Show/hide sidebar"), type = "toggle", value = TRUE),
+              materialSwitch(
+                inputId = "showpanel",
+                value=TRUE, 
+                status ="success"
+              ),
+              
+              
+      #bsButton("showpanel", strong("Show/hide sidebar"), type = "toggle", value = TRUE),
       
       radioGroupButtons(
         inputId = "graph",
         label = h3("Choose a graph :"), 
-        choices = c(`<i class='fa fa-line-chart'></i>` = "line", `<i class='fa fa-bar-chart'></i>` = "bar", 
-                    `<i class="fas fa-globe-europe"></i>` = "globe"),
+        choices = c(`<i class='fa fa-line-chart fa-2x'></i>` = "line", `<i class='fa fa-bar-chart fa-2x'></i>` = "bar", 
+                    `<i class="fas fa-globe-europe fa-2x"></i>` = "globe"),
         justified = TRUE, 
       ),
       
