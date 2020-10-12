@@ -50,6 +50,15 @@ ui <- fluidPage(theme = "bootstrap.css",
   #CSS
   tags$head(
     tags$style(HTML("
+    
+      .shiny-output-error { 
+        visibility: hidden; 
+      }
+      
+      .shiny-output-error:before { 
+        visibility: hidden; 
+      }
+      
       h1 {
         font-family: 'Lobster', cursive;
         font-weight: 500;
