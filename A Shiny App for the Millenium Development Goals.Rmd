@@ -404,15 +404,12 @@ goalD_geo[name=="Belgium"]
 ### 2.6 Flags
 
 ```{r}
-flags <- read.csv("img/Country_Flags.csv")
+flags <- read.csv("https://raw.githubusercontent.com/13w13/A_Shiny_App_for_the_Millenium_Development_Goals/main/img/Country_Flags.csv")
 #goalD %>% View
 #flags[,1] %>% View
 
-#flags %>% View
 
-flags <- flags %>% rename(
-        Country = ï..Country
-    )
+colnames(flags[,1])="Country"
 
 
 PlotDT_Flags <- merge(goalD, flags,
@@ -437,6 +434,7 @@ Here we use sheet n=1 (for funny fact, the excel file had 1 hidden sheet :)) and
 GET(urlfile_WDI_metadata, write_disk(tf <- tempfile(fileext = ".xls")))
 WDI_metadata <- read_xls(tf, range="A1:D1438", sheet=2) %>% as.data.table 
 head(WDI_metadata)
+
 ```
 
 
