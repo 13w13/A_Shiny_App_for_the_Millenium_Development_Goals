@@ -23,7 +23,7 @@ library(shinyWidgets)
 library(plotly)
 library(dplyr)
 library(shinythemes)
-install.packages("mapproj")
+library(scales)
 library(mapproj)
  #global_scope
 selected_country <- unique(PlotDT$Country_Name)
