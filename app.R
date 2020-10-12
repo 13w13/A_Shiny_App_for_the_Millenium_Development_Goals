@@ -26,7 +26,8 @@ library(shinythemes)
 
   
 #global_scope
-selected_country <- unique(PlotDT$Country_Name)
+#selected_country <- unique(PlotDT$Country_Name)
+selected_country <- unique(PlotDT_Flags$Country_Name)
 selected_topic <- unique(goalD$Topic)
 selected_subtopic_1 <- list()
 selected_subtopic_2 <- list()
@@ -36,40 +37,41 @@ selected_aggregation<-unique(colnames(Country_break[,2:5]))
 Plot_choices<-PlotDT_Region#Initizalise
 selected_year<-colnames(goalD[, c(4:39)])
 #Code <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
+selected_flags <- unique(PlotDT_Flags$ImageURL)
 
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(theme = shinytheme("cosmo"),
+ui <- fluidPage(theme = "bootstrap.css",
   #CSS
-  #tags$head(
-    #tags$style(HTML("
-      #h1 {
-      #font-family: 'Lobster', cursive;
-      #font-weight: 500;
-      #line-height: 1.1;
-      #color: green;
-      #}
+  tags$head(
+    tags$style(HTML("
+      h1 {
+        font-family: 'Lobster', cursive;
+        font-weight: 500;
+        line-height: 1.1;
+        color: green;
+      }
       
-      #h2 {
-      #font-family: 'Lobster', cursive;
-      #font-weight: 500;
-      #line-height: 1.1;
-      #color: green;
-      #}
+      h2 {
+        font-family: 'Lobster', cursive;
+        font-weight: 500;
+        line-height: 1.1;
+        color: green;
+      }
       
-      #body {
-      #background-color: #fff;
-      #}
+      body {
+        background-color: #fff;
+      }
       
-      #.selectize-input {
-      #min-height: 20px;
-      #border: 0;
-      #padding: 4px;
-      #font-family: 'Lobster', cursive;
-      #}
+      .selectize-input {
+        min-height: 20px;
+        border: 0;
+        padding: 4px;
+        font-family: 'Lobster', cursive;
+      }
       
-    #"))
-  #),
+    "))
+  ),
   
   titlePanel(
     # app title/description
@@ -114,15 +116,32 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
       
       br(), 
       
-      selectInput("country", 
-                  h2("Choose a country", align = "center"),
-                  selected_country, 
-                  "France"),
+      pickerInput("country",  h2("Choose a country", align = "center"), multiple = F,
+                  choices = selected_country,
+                  
+                  choicesOpt = list(content =  
+                                      mapply(selected_country, selected_flags, FUN = function(country, flagUrl) {
+                                        HTML(paste(
+                                          tags$img(src=flagUrl, width=20, height=15),
+                                          country
+                                        ))
+                                      }
+                                      
+                                      ))),
+      
+      
+      
+      #selectInput("country", 
+      #            h2("Choose a country", align = "center"),
+      #            selected_country, 
+      #            "France"),
+      
       br(), 
-      selectInput("aggregation", 
-                  h2("Choose an aggregation view", align = "center"),
-                  selected_aggregation, 
-                  "Region"),
+      awesomeRadio(inputId = "aggregation", 
+                   label = h2("Choose an aggregation view", align = "center"),
+                   selected_aggregation, 
+                   "Region",
+                   status="warning"),
       
       br(), 
       selectInput("year", 
@@ -131,10 +150,12 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                   "1972"),
       
       br(),
-      radioButtons("y_axis_choice", 
-                   h2("Axis :", align = "center"), 
-                   c("linear", "logarithmic")), 
-      
+      awesomeRadio(
+        inputId = "y_axis_choice",
+        label = h2("Axis :", align = "center"),  
+        c("linear", "logarithmic"),
+        status = "success"
+      ), 
       br(), 
       dateRangeInput("date_choice", 
                      h2("Choose a date range :", align="center"),

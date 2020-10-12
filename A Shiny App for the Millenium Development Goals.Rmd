@@ -105,6 +105,7 @@ library(readxl)
 library(stringr)
 library(XML)
 library("methods")
+library(dplyr)
 ```
 
 
@@ -400,6 +401,29 @@ goalD_geo<-xmlToDataFrame("http://api.worldbank.org/v2/country") %>% setDT()
 goalD_geo[name=="Belgium"]
 ```
 
+### 2.6 Flags
+
+```{r}
+flags <- read.csv("img/Country_Flags.csv")
+#goalD %>% View
+#flags[,1] %>% View
+
+#flags %>% View
+
+flags <- flags %>% rename(
+        Country = ï..Country
+    )
+
+
+PlotDT_Flags <- merge(goalD, flags,
+                     by.x = 'Country_Name', 
+                     by.y = 'Country', all= FALSE)
+
+PlotDT_Flags %>% View
+#unique(PlotDT_Flags$Country_Name) %>% View
+#unique(PlotDT_Flags$ImageURL) %>% View
+```
+
 ##3 Creating plots
 ### 3.1 Casting from a wide table to a long table:
 
@@ -410,7 +434,7 @@ PlotDT = data.table::melt(goalD, id.vars = c(1,2,3,40,41,42,43,44,45,46,47,48,49
           variable.name = "Date",
           value.name = "Value")
 
-PlotDT %>% View()
+#PlotDT %>% View()
 ```
 
 
