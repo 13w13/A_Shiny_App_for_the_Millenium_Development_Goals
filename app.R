@@ -212,7 +212,6 @@ ui <- fluidPage(theme = "bootstrap.css",
       
       
       plotlyOutput("displot4")
-    
     )
   )
 )
