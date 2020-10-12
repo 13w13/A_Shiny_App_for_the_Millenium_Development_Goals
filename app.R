@@ -321,10 +321,10 @@ server <- function(input, output, session) {
                                                                       &`Series_Name.x`==input$indicator],
                              aes(x=Date,y=Value, colour=input$country), stat="identity")+ scale_y_continuous(labels = percent)+
       geom_bar(width = .9, Position="Fill", data=Plot_choices[`Series_Name.x`==input$indicator], 
-               aes_string(x="Date", y="Value", colour=input$aggregation), stat="identity") 
+               aes_string(x="Date", y="Value", colour=input$aggregation), stat="identity") + scale_y_continuous(labels = percent)
     
     q
-    
+  
     
   })
   
