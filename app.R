@@ -33,11 +33,13 @@ selected_subtopic_1 <- list()
 selected_subtopic_2 <- list()
 selected_subtopic_3 <- list()
 selected_indicator <- list()
-selected_aggregation<-unique(colnames(Country_break[,2:5]))
+#selected_aggregation<-unique(colnames(Country_break[,2:5]))
+selected_aggregation<-unique(str_replace_all(colnames(Country_break[,2:5]), "_", " "))
 Plot_choices<-PlotDT_Region#Initizalise
 selected_year<-colnames(goalD[, c(4:39)])
 #Code <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
 selected_flags <- unique(PlotDT_Flags$ImageURL)
+graph_value <- 0
 
 
 # Define UI for application that draws a histogram
@@ -59,6 +61,13 @@ ui <- fluidPage(theme = "bootstrap.css",
         color: green;
       }
       
+      h3 {
+        font-family: 'Lobster', cursive;
+        font-weight: 500;
+        line-height: 1.1;
+        color: black;
+      }
+      
       body {
         background-color: #fff;
       }
@@ -75,8 +84,9 @@ ui <- fluidPage(theme = "bootstrap.css",
   
   titlePanel(
     # app title/description
-    h1("Millenium Development Goals"),
+    h1("Millenium Development Goals", align="center"),
   ),
+  br(),
   sidebarLayout(
     sidebarPanel(
       helpText("Here you can find some graphical information
@@ -173,11 +183,25 @@ ui <- fluidPage(theme = "bootstrap.css",
     ),
     mainPanel(
       
-      tabsetPanel(type = "tabs",
-                  tabPanel(h3("GGPLOT"), (plotlyOutput("displot"))),
-                  tabPanel(h3("HISTO"), (plotlyOutput("displot2"))),
-                  tabPanel(h3("MAP"), plotlyOutput("displot3"))
-      )
+      radioGroupButtons(
+        inputId = "graph",
+        label = h3("Choose a graph :"), 
+        choices = c(`<i class='fa fa-line-chart'></i>` = "line", `<i class='fa fa-bar-chart'></i>` = "bar", 
+                    `<i class="fas fa-globe-europe"></i>` = "globe"),
+        justified = TRUE, 
+      ),
+      
+      #tabsetPanel(type = "tabs",
+      #            tabPanel(h3("GGPLOT"), (plotlyOutput("displot"))),
+      #            tabPanel(h3("HISTO"), (plotlyOutput("displot2"))),
+      #            tabPanel(h3("MAP"), plotlyOutput("displot3"))
+      #)
+      
+      
+      plotlyOutput("displot4"),
+      
+      
+      
     )
   )
 )
@@ -185,6 +209,17 @@ ui <- fluidPage(theme = "bootstrap.css",
 
 #  Define a server for the Shiny app
 server <- function(input, output, session) {
+  
+  #observeEvent(input$graph, {
+    #print(input$graph)
+    #graph_value <<- switch(input$graph, "line"= "displot", "bar" = "displot2") 
+    #print(graph_value)
+    
+    #output$displot <- switch(input$graph, "line"= output$displot) 
+    
+    
+    
+  #})
   
   observeEvent(input$topic, {
     #remise a zero de l'indicator
@@ -351,7 +386,9 @@ server <- function(input, output, session) {
                                          &`Series_Name.x`==input$indicator], 
                              aes(x=Date,y=Value, colour=input$country), stat="identity")+
       geom_bar(data=Plot_choices[`Series_Name.x`==input$indicator], 
-               aes_string(x="Date",y="Value", colour=input$aggregation), stat="identity")
+               aes_string(x="Date",y="Value", colour=input$aggregation), stat="identity")+
+      xlab("Dates")+
+      ylab(input$indicator)
     q
     
     
@@ -426,6 +463,101 @@ server <- function(input, output, session) {
     fig
   })
   
+  output$displot4 <- renderPlotly({
+    
+    
+    if(input$graph == "line") {
+      p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
+      
+      
+      color <- str_replace(input$aggregation, " ", "_")
+      
+      Plot_choices <- switch(input$aggregation,"Region"=PlotDT_Region,
+                             "Income group"=PlotDT_Income_group,
+                             "Lending category"=PlotDT_Lending_category, 
+                             "Other"=PlotDT_Other)
+      
+      #color <- switch(input$aggregation,"Region"=PlotDT_Region,
+      #                "Income_group"=PlotDT_Income_group,
+      #                "Lending_category"=PlotDT_Lending_category, 
+      #                "Other"=PlotDT_Other)
+      
+      q<-ggplot() +
+        geom_line(data=PlotDT[`Country_Name`==input$country &`Series_Name.x`==input$indicator], 
+                  aes(x=Date, y=Value,colour=input$country))+ 
+        geom_line(data=Plot_choices[`Series_Name.x`==input$indicator], 
+                  aes_string("Date", "Value", colour = color)) + 
+        xlab("Dates")+
+        ylab(input$indicator)+
+        p
+      
+      ggplotly(q)
+      
+    } else if (input$graph == "bar")  {
+      p <- switch(input$y_axis_choice,"linear" = NULL,"logarithmic"=scale_y_log10())
+      
+      color <- str_replace(input$aggregation, " ", "_")
+      
+      Plot_choices <- switch(input$aggregation,"Region"=PlotDT_Region,
+                             "Income group"=PlotDT_Income_group,
+                             "Lending category"=PlotDT_Lending_category, 
+                             "Other"=PlotDT_Other)
+      
+      q <- ggplot() + geom_bar(data=PlotDT[`Country_Name`==input$country 
+                                           &`Series_Name.x`==input$indicator], 
+                               aes(x=Date,y=Value, colour=input$country), stat="identity")+
+        geom_bar(data=Plot_choices[`Series_Name.x`==input$indicator], 
+                 aes_string(x="Date",y="Value", colour=color), stat="identity")+
+        xlab("Dates")+
+        ylab(input$indicator)
+      q
+      
+    } else if (input$graph == "globe") {
+      agr_data <- PlotDT[year(Date) == input$year & 
+                           Series_Name.x == input$indicator, 
+                         list(Country_Name, Series_Name.x, Value)]
+      
+      agr.map <- merge(agr_data, Code_break,
+                       by.x = 'Country_Name', 
+                       by.y = 'Economy', all= TRUE)
+      
+      agr.map <- as.data.table(agr.map)
+      
+      idx = agr.map[, .I[which(is.na(Value))]]
+      
+      agr.map[idx, Value := 0]
+      
+      
+      # light grey boundaries
+      l <- list(color = toRGB("grey"), width = 0.5)
+      
+      # specify map projection/options
+      g <- list(
+        showframe = FALSE,
+        showcoastlines = FALSE,
+        projection = list(type = 'Mercator')
+      )
+      
+      fig <- plot_geo(agr.map)
+      
+      fig <- fig %>% add_trace(
+        z = ~Value, color = ~Value, colors = 'Greens',
+        text = ~Country_Name, locations = ~Code, marker = list(line = l)
+      )
+      
+      fig <- fig %>% colorbar(title = input$indicator, tickprefix = '$')
+      
+      fig <- fig %>% layout(
+        title = input$indicator,
+        geo = g
+      )
+      
+      fig
+      
+    }
+    
+  })
+   
   
   
   
