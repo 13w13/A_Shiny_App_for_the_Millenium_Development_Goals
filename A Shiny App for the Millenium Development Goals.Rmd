@@ -424,6 +424,26 @@ PlotDT_Flags %>% View
 #unique(PlotDT_Flags$ImageURL) %>% View
 ```
 
+
+### 2.7 Add Indicators Metadata and desription for shiny App
+World Bank provides complete glossary of its indicator. We seleted our WDI dataset and downloaded the xls file.  https://databank.worldbank.org/metadataglossary/World-Development-Indicators/series#
+
+```{r}
+urlfile_WDI_metadata="https://databank.worldbank.org/metadata/glossary_download.aspx?DbID=2&Concept=series&SearchTxt=&DBname=World%20Development%20Indicators"
+```
+
+Here we use sheet n=1 (for funny fact, the excel file had 1 hidden sheet :)) and select group name
+```{r}
+GET(urlfile_WDI_metadata, write_disk(tf <- tempfile(fileext = ".xls")))
+WDI_metadata <- read_xls(tf, range="A1:D1438", sheet=2) %>% as.data.table 
+head(WDI_metadata)
+```
+
+
+```{r}
+melt(goalD)
+```
+
 ##3 Creating plots
 ### 3.1 Casting from a wide table to a long table:
 
