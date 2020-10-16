@@ -1,8 +1,7 @@
 # A Shiny App for the Millenium Development Goals
-Julieva Cohen, Alexandra, Antoine Settelen, Simon Weiss
-
-~One week development
+Julieva Cohen, Alexandra, Antoine Settelen, Simon Weiss  
 ---
+~1 week development
 
 ## 1. Introduction
 
